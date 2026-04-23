@@ -82,4 +82,15 @@ describe("home content API", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json().saved.track).toBe("news");
   });
+
+  it("returns a content item by track and id", async () => {
+    const app = buildApp();
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/content/conversation/conversation-1"
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().item.id).toBe("conversation-1");
+  });
 });

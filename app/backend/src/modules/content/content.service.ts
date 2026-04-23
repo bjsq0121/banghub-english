@@ -17,3 +17,16 @@ export function getTodayContent() {
     todayNews: newsRow ? newsItemSchema.parse(JSON.parse(newsRow.payload_json)) : null
   };
 }
+
+export function getContentById(track: "conversation" | "news", id: string) {
+  const row = db.read().content_items.find((entry) => entry.track === track && entry.id === id);
+
+  if (!row) {
+    return null;
+  }
+
+  const parsed = JSON.parse(row.payload_json);
+  return track === "conversation"
+    ? conversationItemSchema.parse(parsed)
+    : newsItemSchema.parse(parsed);
+}
