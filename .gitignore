@@ -2,4 +2,5 @@
 .worktrees
 node_modules
 app/backend/data
+app/backend/dist
 app/frontend/dist
