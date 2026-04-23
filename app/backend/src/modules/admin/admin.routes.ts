@@ -1,11 +1,12 @@
 import type { FastifyInstance } from "fastify";
+import { ZodError } from "zod";
 import { COLLECTIONS } from "../../db/collections";
 import { getFirestoreClient } from "../../db/firestore";
 import { requireSession } from "../../plugins/session";
-import { saveContentItem } from "./admin.service";
+import { saveDailyMission } from "./admin.service";
 
 export async function registerAdminRoutes(app: FastifyInstance) {
-  app.post("/api/admin/content", async (request, reply) => {
+  app.post("/api/admin/missions", async (request, reply) => {
     const userId = requireSession(request, reply);
 
     if (!userId) {
@@ -21,6 +22,15 @@ export async function registerAdminRoutes(app: FastifyInstance) {
       return { message: "Forbidden" };
     }
 
-    return { saved: await saveContentItem(request.body) };
+    try {
+      return { saved: await saveDailyMission(request.body) };
+    } catch (error) {
+      if (error instanceof ZodError) {
+        reply.code(400);
+        return { message: "Invalid mission payload" };
+      }
+
+      throw error;
+    }
   });
 }

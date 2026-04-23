@@ -1,39 +1,24 @@
-import { conversationItemSchema, newsItemSchema } from "@banghub/shared";
+import { dailyMissionSchema } from "@banghub/shared";
 import { COLLECTIONS } from "../../db/collections";
+import { getKoreaDateKey } from "../../db/date-key";
 import { getFirestoreClient } from "../../db/firestore";
 
-export async function saveContentItem(payload: unknown) {
-  const parsed =
-    typeof payload === "object" && payload && (payload as { track?: string }).track === "conversation"
-      ? conversationItemSchema.parse(payload)
-      : newsItemSchema.parse(payload);
+export async function saveDailyMission(payload: unknown) {
+  const parsed = dailyMissionSchema.parse(payload);
+  const { isToday: _isToday, ...missionData } = parsed;
+
+  if (parsed.isToday) {
+    missionData.dateKey = getKoreaDateKey();
+  }
 
   const db = getFirestoreClient();
   const now = new Date().toISOString();
-  const today = new Date().toISOString().slice(0, 10);
-  const collection =
-    parsed.track === "conversation" ? COLLECTIONS.conversationItems : COLLECTIONS.newsItems;
 
-  await db.collection(collection).doc(parsed.id).set({
-    ...parsed,
+  await db.collection(COLLECTIONS.dailyMissions).doc(parsed.id).set({
+    ...missionData,
     createdAt: now,
     updatedAt: now
   });
 
-  if (parsed.isToday) {
-    await db.collection(COLLECTIONS.dailyAssignments).doc(today).set(
-      parsed.track === "conversation"
-        ? {
-            conversationItemId: parsed.id,
-            updatedAt: now
-          }
-        : {
-            newsItemId: parsed.id,
-            updatedAt: now
-          },
-      { merge: true }
-    );
-  }
-
-  return parsed;
+  return { ...parsed, dateKey: missionData.dateKey };
 }

@@ -1,9 +1,10 @@
 import "./test-firestore";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../app";
 import { COLLECTIONS } from "../db/collections";
 import { getKoreaDateKey } from "../db/date-key";
 import { getFirestoreClient } from "../db/firestore";
+import { hashPassword } from "../modules/auth/auth.service";
 
 function missionDoc(overrides: Record<string, unknown> = {}) {
   return {
@@ -41,6 +42,19 @@ function missionDoc(overrides: Record<string, unknown> = {}) {
 }
 
 describe("mission content API", () => {
+  beforeEach(async () => {
+    const db = getFirestoreClient();
+    await db.collection(COLLECTIONS.users).doc("admin-1").set({
+      email: "admin@banghub.kr",
+      passwordHash: hashPassword("password123"),
+      difficulty: "basic",
+      selectedTracks: ["family-missions"],
+      isAdmin: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  });
+
   it("uses Korea local date for mission date keys", () => {
     expect(getKoreaDateKey(new Date("2026-04-22T16:00:00.000Z"))).toBe("2026-04-23");
   });
@@ -106,5 +120,78 @@ describe("mission content API", () => {
     expect(response.statusCode).toBe(200);
     expect(body.item.id).toBe("mission-detail");
     expect(body.item.sixYearOld.listenText).toBe("Let's jump.");
+  });
+
+  it("publishes a daily mission from an admin session", async () => {
+    const app = buildApp();
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { email: "admin@banghub.kr", password: "password123" }
+    });
+    const cookieHeader = login.headers["set-cookie"];
+    const sessionCookie = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader ?? "";
+    const payload = missionDoc({
+      id: "mission-admin-publish",
+      title: "Admin mission",
+      dateKey: "2000-01-01",
+      isToday: true
+    });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/admin/missions",
+      headers: { cookie: sessionCookie },
+      payload
+    });
+    const body = response.json();
+
+    expect(response.statusCode).toBe(200);
+    expect(body.saved).toMatchObject({
+      id: "mission-admin-publish",
+      title: "Admin mission",
+      dateKey: getKoreaDateKey(),
+      targetWord: "car",
+      isToday: true
+    });
+
+    const db = getFirestoreClient();
+    const saved = await db.collection(COLLECTIONS.dailyMissions).doc("mission-admin-publish").get();
+    expect(saved.data()).toMatchObject({
+      dateKey: getKoreaDateKey(),
+      title: "Admin mission",
+      targetWord: "car",
+      publishStatus: "published"
+    });
+    expect(saved.data()).not.toHaveProperty("isToday");
+
+    const home = await app.inject({ method: "GET", url: "/api/home" });
+    expect(home.statusCode).toBe(200);
+    expect(home.json().todayMission).toMatchObject({
+      id: "mission-admin-publish",
+      title: "Admin mission",
+      isToday: true
+    });
+  });
+
+  it("returns 400 for invalid admin mission payloads", async () => {
+    const app = buildApp();
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { email: "admin@banghub.kr", password: "password123" }
+    });
+    const cookieHeader = login.headers["set-cookie"];
+    const sessionCookie = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader ?? "";
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/admin/missions",
+      headers: { cookie: sessionCookie },
+      payload: { id: "invalid-mission" }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ message: "Invalid mission payload" });
   });
 });
