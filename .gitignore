@@ -1,3 +1,4 @@
 .codex
 .worktrees
 node_modules
+app/backend/data
