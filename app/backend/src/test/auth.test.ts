@@ -3,7 +3,7 @@ import { buildApp } from "../app";
 import { db } from "../db/client";
 import { hashPassword } from "../modules/auth/auth.service";
 
-describe("completion API", () => {
+describe("auth and session security", () => {
   beforeEach(() => {
     db.reset();
     db.write((state) => {
@@ -18,25 +18,23 @@ describe("completion API", () => {
     });
   });
 
-  it("saves completion for logged-in users", async () => {
-    const app = buildApp();
-    const login = await app.inject({
-      method: "POST",
-      url: "/api/auth/login",
-      payload: { email: "user@banghub.kr", password: "password123" }
-    });
+  it("stores hashed passwords instead of plaintext", () => {
+    const saved = db.read().users[0];
 
-    const cookieHeader = login.headers["set-cookie"];
-    const sessionCookie = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader ?? "";
+    expect(saved?.password).not.toBe("password123");
+    expect(saved?.password).toContain(":");
+  });
+
+  it("rejects forged session cookies", async () => {
+    const app = buildApp();
     const response = await app.inject({
       method: "POST",
       url: "/api/progress/completions",
-      headers: { cookie: sessionCookie },
+      headers: { cookie: "session=user-1" },
       payload: { contentId: "conversation-1" }
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(db.read().completions).toHaveLength(1);
-    expect(db.read().completions[0]?.user_id).toBe("user-1");
+    expect(response.statusCode).toBe(401);
+    expect(db.read().completions).toHaveLength(0);
   });
 });

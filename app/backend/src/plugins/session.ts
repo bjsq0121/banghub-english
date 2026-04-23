@@ -11,7 +11,15 @@ export function registerSession(app: FastifyInstance, secret: string) {
   app.register(cookie, { secret });
 
   app.addHook("onRequest", async (request) => {
-    request.sessionUserId = request.cookies.session ?? null;
+    const signedSession = request.cookies.session;
+
+    if (!signedSession) {
+      request.sessionUserId = null;
+      return;
+    }
+
+    const unsigned = request.unsignCookie(signedSession);
+    request.sessionUserId = unsigned.valid ? unsigned.value : null;
   });
 }
 
@@ -19,7 +27,8 @@ export function setSession(reply: FastifyReply, userId: string) {
   reply.setCookie("session", userId, {
     httpOnly: true,
     path: "/",
-    sameSite: "lax"
+    sameSite: "lax",
+    signed: true
   });
 }
 

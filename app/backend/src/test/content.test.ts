@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../app";
 import { db } from "../db/client";
+import { hashPassword } from "../modules/auth/auth.service";
 
 describe("home content API", () => {
   beforeEach(() => {
@@ -44,7 +45,7 @@ describe("home content API", () => {
       state.users.push({
         id: "admin-1",
         email: "admin@banghub.kr",
-        password: "password123",
+        password: hashPassword("password123"),
         difficulty: "basic",
         selected_tracks: JSON.stringify(["conversation", "news"]),
         is_admin: 1

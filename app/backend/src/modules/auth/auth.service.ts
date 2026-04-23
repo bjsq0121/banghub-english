@@ -1,8 +1,34 @@
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "../../db/client";
+
+export function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const derivedKey = scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${derivedKey}`;
+}
+
+export function verifyPassword(password: string, hashedPassword: string) {
+  const [salt, storedKey] = hashedPassword.split(":");
+
+  if (!salt || !storedKey) {
+    return false;
+  }
+
+  const derivedKey = scryptSync(password, salt, 64);
+  const storedBuffer = Buffer.from(storedKey, "hex");
+
+  if (storedBuffer.length !== derivedKey.length) {
+    return false;
+  }
+
+  return timingSafeEqual(storedBuffer, derivedKey);
+}
 
 export function loginUser(email: string, password: string) {
   const state = db.read();
-  const user = state.users.find((entry) => entry.email === email && entry.password === password);
+  const user = state.users.find(
+    (entry) => entry.email === email && verifyPassword(password, entry.password)
+  );
 
   if (!user) {
     return null;

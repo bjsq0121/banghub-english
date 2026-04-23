@@ -17,6 +17,11 @@ export async function getContentItem(track: "conversation" | "news", id: string)
   const response = await fetch(`${API_BASE}/api/content/${track}/${id}`, {
     credentials: "include"
   });
+
+  if (!response.ok) {
+    throw new Error(response.status === 404 ? "Content not found" : "Failed to load content");
+  }
+
   const payload = await response.json();
   return payload.item as ConversationItem | NewsItem;
 }

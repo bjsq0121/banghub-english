@@ -2,6 +2,7 @@ import { createBrowserRouter, useLoaderData } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { AdminPage } from "../features/admin/AdminPage";
 import { LoginPage } from "../features/auth/LoginPage";
+import { ErrorPage } from "../features/common/ErrorPage";
 import { HomePage } from "../features/home/HomePage";
 import { ConversationPage } from "../features/conversation/ConversationPage";
 import { NewsPage } from "../features/news/NewsPage";
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <AppShell />,
+    errorElement: <ErrorPage />,
     children: [
       {
         index: true,
