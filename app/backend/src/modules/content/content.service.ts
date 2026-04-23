@@ -9,14 +9,14 @@ function todayKey() {
 
 function parseMissionDocument(
   doc: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>,
-  today: string
+  todayMissionId: string | null
 ) {
   const data = doc.data();
 
   return dailyMissionSchema.parse({
     ...data,
     id: doc.id,
-    isToday: data?.dateKey === today
+    isToday: doc.id === todayMissionId
   });
 }
 
@@ -42,22 +42,29 @@ function compareTodayMissionDocs(
   return left.id.localeCompare(right.id);
 }
 
-export async function getTodayMission() {
-  const db = getFirestoreClient();
-  const today = todayKey();
+async function getTodayMissionDoc(
+  db: FirebaseFirestore.Firestore,
+  today: string
+): Promise<FirebaseFirestore.QueryDocumentSnapshot | null> {
   const snapshot = await db
     .collection(COLLECTIONS.dailyMissions)
     .where("dateKey", "==", today)
     .where("publishStatus", "==", "published")
     .get();
 
-  const doc = [...snapshot.docs].sort(compareTodayMissionDocs)[0];
+  return [...snapshot.docs].sort(compareTodayMissionDocs)[0] ?? null;
+}
+
+export async function getTodayMission() {
+  const db = getFirestoreClient();
+  const today = todayKey();
+  const doc = await getTodayMissionDoc(db, today);
 
   if (!doc) {
     return null;
   }
 
-  return parseMissionDocument(doc, today);
+  return parseMissionDocument(doc, doc.id);
 }
 
 export async function getMissionById(id: string) {
@@ -69,5 +76,6 @@ export async function getMissionById(id: string) {
     return null;
   }
 
-  return parseMissionDocument(doc, today);
+  const todayDoc = await getTodayMissionDoc(db, today);
+  return parseMissionDocument(doc, todayDoc?.id ?? null);
 }

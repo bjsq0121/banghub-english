@@ -130,6 +130,32 @@ describe("mission content API", () => {
     expect(body.item.sixYearOld.listenText).toBe("Let's jump.");
   });
 
+  it("marks detail isToday=false for stale missions that share today's dateKey", async () => {
+    const db = getFirestoreClient();
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-winner").set(
+      missionDoc({
+        title: "Winner",
+        updatedAt: "2026-04-23T00:05:00.000Z"
+      })
+    );
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-stale").set(
+      missionDoc({
+        title: "Stale",
+        updatedAt: "2026-04-23T00:00:00.000Z"
+      })
+    );
+
+    const app = buildApp();
+    const home = await app.inject({ method: "GET", url: "/api/home" });
+    expect(home.json().todayMission.id).toBe("mission-winner");
+
+    const winner = await app.inject({ method: "GET", url: "/api/missions/mission-winner" });
+    const stale = await app.inject({ method: "GET", url: "/api/missions/mission-stale" });
+
+    expect(winner.json().item.isToday).toBe(true);
+    expect(stale.json().item.isToday).toBe(false);
+  });
+
   it("publishes a daily mission from an admin session", async () => {
     const db = getFirestoreClient();
     await db.collection(COLLECTIONS.dailyMissions).doc("mission-red-car").set(
