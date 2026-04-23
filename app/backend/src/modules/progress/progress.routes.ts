@@ -12,7 +12,7 @@ export async function registerProgressRoutes(app: FastifyInstance) {
       return { message: "Unauthorized" };
     }
 
-    await markCompletion(userId, payload.contentId);
+    await markCompletion(userId, payload.missionId, payload.childMode);
     return { ok: true };
   });
 }

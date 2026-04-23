@@ -1,17 +1,23 @@
+import type { ChildMode } from "@banghub/shared";
 import { COLLECTIONS } from "../../db/collections";
+import { getKoreaDateKey } from "../../db/date-key";
 import { getFirestoreClient } from "../../db/firestore";
 
-export async function markCompletion(userId: string, contentId: string) {
+export async function markCompletion(userId: string, missionId: string, childMode: ChildMode) {
   const db = getFirestoreClient();
+  const now = new Date();
+
   await db
     .collection(COLLECTIONS.users)
     .doc(userId)
     .collection("completions")
-    .doc(contentId)
+    .doc(`${missionId}-${childMode}`)
     .set({
-      contentId,
-      completedOn: new Date().toISOString().slice(0, 10),
-      createdAt: new Date().toISOString()
+      missionId,
+      childMode,
+      completedOn: getKoreaDateKey(now),
+      rewardId: `sticker-${childMode}`,
+      createdAt: now.toISOString()
     });
 }
 
@@ -20,12 +26,19 @@ export async function listCompletions(userId: string) {
   const snapshot = await db.collection(COLLECTIONS.users).doc(userId).collection("completions").get();
 
   return snapshot.docs.map((doc) => {
-    const data = doc.data() as { contentId: string; completedOn: string };
+    const data = doc.data() as {
+      missionId: string;
+      childMode: ChildMode;
+      completedOn: string;
+      rewardId: string;
+    };
 
     return {
       userId,
-      contentId: data.contentId,
-      completedOn: data.completedOn
+      missionId: data.missionId,
+      childMode: data.childMode,
+      completedOn: data.completedOn,
+      rewardId: data.rewardId
     };
   });
 }
