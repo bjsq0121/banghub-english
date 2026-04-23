@@ -6,3 +6,4 @@ firestore-emulator.log
 app/backend/data
 app/backend/dist
 app/frontend/dist
+app/shared/dist

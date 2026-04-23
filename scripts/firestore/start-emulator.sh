@@ -14,7 +14,7 @@ find_open_port() {
   local end="$2"
 
   for port in $(seq "$start" "$end"); do
-    if ! ss -ltn | awk '{print $4}' | grep -qE "(^|:)$port$"; then
+    if ! bash -c "exec 3<>/dev/tcp/127.0.0.1/$port" >/dev/null 2>&1; then
       echo "$port"
       return 0
     fi
