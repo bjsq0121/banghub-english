@@ -1,89 +1,51 @@
-import { conversationItemSchema, newsItemSchema } from "@banghub/shared";
+import { dailyMissionSchema } from "@banghub/shared";
 import { COLLECTIONS } from "../../db/collections";
+import { getKoreaDateKey } from "../../db/date-key";
 import { getFirestoreClient } from "../../db/firestore";
 
-function getTodayAssignmentId(
-  assignment: { conversationItemId?: string | null; newsItemId?: string | null },
-  track: "conversation" | "news"
+function todayKey() {
+  return getKoreaDateKey();
+}
+
+function parseMissionDocument(
+  doc: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>,
+  today: string
 ) {
-  return track === "conversation" ? assignment.conversationItemId : assignment.newsItemId;
+  const data = doc.data();
+
+  return dailyMissionSchema.parse({
+    ...data,
+    id: doc.id,
+    isToday: data?.dateKey === today
+  });
 }
 
-export async function getTodayContent() {
+export async function getTodayMission() {
   const db = getFirestoreClient();
-  const today = new Date().toISOString().slice(0, 10);
-  const assignmentDoc = await db.collection(COLLECTIONS.dailyAssignments).doc(today).get();
+  const today = todayKey();
+  const snapshot = await db
+    .collection(COLLECTIONS.dailyMissions)
+    .where("dateKey", "==", today)
+    .where("publishStatus", "==", "published")
+    .get();
 
-  if (!assignmentDoc.exists) {
-    return {
-      todayConversation: null,
-      todayNews: null
-    };
-  }
+  const doc = [...snapshot.docs].sort((left, right) => left.id.localeCompare(right.id))[0];
 
-  const assignment = assignmentDoc.data() as {
-    conversationItemId?: string | null;
-    newsItemId?: string | null;
-  };
-
-  const conversationDoc = assignment.conversationItemId
-    ? await db.collection(COLLECTIONS.conversationItems).doc(assignment.conversationItemId).get()
-    : null;
-  const newsDoc = assignment.newsItemId
-    ? await db.collection(COLLECTIONS.newsItems).doc(assignment.newsItemId).get()
-    : null;
-
-  return {
-    todayConversation: conversationDoc?.exists
-      ? conversationItemSchema.parse({
-          id: conversationDoc.id,
-          track: "conversation",
-          isToday: true,
-          ...conversationDoc.data()
-        })
-      : null,
-    todayNews: newsDoc?.exists
-      ? newsItemSchema.parse({
-          id: newsDoc.id,
-          track: "news",
-          isToday: true,
-          ...newsDoc.data()
-        })
-      : null
-  };
-}
-
-export async function getContentById(track: "conversation" | "news", id: string) {
-  const db = getFirestoreClient();
-  const today = new Date().toISOString().slice(0, 10);
-  const collection =
-    track === "conversation" ? COLLECTIONS.conversationItems : COLLECTIONS.newsItems;
-  const doc = await db.collection(collection).doc(id).get();
-
-  if (!doc.exists) {
+  if (!doc) {
     return null;
   }
 
-  const assignmentDoc = await db.collection(COLLECTIONS.dailyAssignments).doc(today).get();
-  const assignment = assignmentDoc.exists
-    ? (assignmentDoc.data() as {
-        conversationItemId?: string | null;
-        newsItemId?: string | null;
-      })
-    : {};
-  const isToday = getTodayAssignmentId(assignment, track) === id;
+  return parseMissionDocument(doc, today);
+}
 
-  return track === "conversation"
-    ? conversationItemSchema.parse({
-        id: doc.id,
-        track: "conversation",
-        isToday,
-        ...doc.data()
-      })
-    : newsItemSchema.parse({
-        id: doc.id,
-        track: "news",
-        isToday,
-        ...doc.data()
-      });
+export async function getMissionById(id: string) {
+  const db = getFirestoreClient();
+  const today = todayKey();
+  const doc = await db.collection(COLLECTIONS.dailyMissions).doc(id).get();
+
+  if (!doc.exists || doc.data()?.publishStatus !== "published") {
+    return null;
+  }
+
+  return parseMissionDocument(doc, today);
 }

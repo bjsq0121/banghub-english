@@ -1,6 +1,4 @@
 export const COLLECTIONS = {
-  conversationItems: "conversationItems",
-  newsItems: "newsItems",
   users: "users",
-  dailyAssignments: "dailyAssignments"
+  dailyMissions: "dailyMissions"
 } as const;

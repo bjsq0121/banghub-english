@@ -1,46 +1,33 @@
 import { getConfig } from "../config";
 import { hashPassword } from "../modules/auth/auth.service";
 import { COLLECTIONS } from "./collections";
+import { getKoreaDateKey } from "./date-key";
 import { getFirestoreClient } from "./firestore";
-import { seedConversationItems, seedNewsItems } from "./seed-data";
+import { seedDailyMissions } from "./seed-data";
 
 export async function seedFirestore() {
   const config = getConfig();
   const db = getFirestoreClient();
   const now = new Date().toISOString();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getKoreaDateKey();
   const batch = db.batch();
 
-  for (const item of seedConversationItems) {
-    batch.set(db.collection(COLLECTIONS.conversationItems).doc(item.id), {
+  seedDailyMissions.forEach((item, index) => {
+    batch.set(db.collection(COLLECTIONS.dailyMissions).doc(item.id), {
       ...item,
+      dateKey: index === 0 ? today : item.dateKey,
       createdAt: now,
       updatedAt: now
     });
-  }
-
-  for (const item of seedNewsItems) {
-    batch.set(db.collection(COLLECTIONS.newsItems).doc(item.id), {
-      ...item,
-      createdAt: now,
-      updatedAt: now
-    });
-  }
+  });
 
   batch.set(db.collection(COLLECTIONS.users).doc("admin-user"), {
     email: config.adminEmail,
     passwordHash: hashPassword(config.adminPassword),
     difficulty: "basic",
-    selectedTracks: ["conversation", "news"],
+    selectedTracks: ["family-missions"],
     isAdmin: true,
     createdAt: now,
-    updatedAt: now
-  });
-
-  batch.set(db.collection(COLLECTIONS.dailyAssignments).doc(today), {
-    conversationItemId: "conversation-1",
-    newsItemId: "news-1",
-    publishedAt: now,
     updatedAt: now
   });
 

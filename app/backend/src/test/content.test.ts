@@ -1,98 +1,110 @@
 import "./test-firestore";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildApp } from "../app";
 import { COLLECTIONS } from "../db/collections";
+import { getKoreaDateKey } from "../db/date-key";
 import { getFirestoreClient } from "../db/firestore";
-import { hashPassword } from "../modules/auth/auth.service";
 
-describe("home content API", () => {
-  beforeEach(async () => {
-    const db = getFirestoreClient();
-    const now = new Date().toISOString();
-    const today = new Date().toISOString().slice(0, 10);
+function missionDoc(overrides: Record<string, unknown> = {}) {
+  return {
+    dateKey: getKoreaDateKey(),
+    theme: "toy forest",
+    title: "Find the red car",
+    character: "robo",
+    targetWord: "car",
+    phrase: "red car",
+    sentence: "I see a red car.",
+    dadGuideKo: "Find the red toy car together.",
+    threeYearOld: {
+      promptKo: "Tap the red car.",
+      listenText: "red car",
+      activityType: "tap-choice",
+      choices: [
+        { id: "red-car", label: "red car", imageUrl: "/assets/missions/red-car.svg", isCorrect: true },
+        { id: "blue-block", label: "blue block", imageUrl: "/assets/missions/blue-block.svg", isCorrect: false }
+      ],
+      correctChoiceId: "red-car"
+    },
+    sixYearOld: {
+      promptKo: "Listen and repeat.",
+      listenText: "I see a red car.",
+      activityType: "repeat-after-me",
+      choices: [],
+      correctChoiceId: null
+    },
+    encouragement: "Great finding!",
+    image: { url: "/assets/missions/red-car.svg", alt: "A red toy car" },
+    audio: { wordUrl: null, phraseUrl: null, sentenceUrl: null },
+    publishStatus: "published",
+    ...overrides
+  };
+}
 
-    await db.collection(COLLECTIONS.conversationItems).doc("conversation-1").set({
-      title: "Client meeting opener",
-      difficulty: "basic",
-      situation: "You are starting a weekly client call.",
-      prompt: "Greet the client and confirm the agenda.",
-      answer: "Thanks for joining. Shall we quickly confirm today's agenda?",
-      alternatives: ["Thanks for making time today.", "Can we start by reviewing the agenda?"],
-      ttsText: "Thanks for joining. Shall we quickly confirm today's agenda?",
-      publishStatus: "published",
-      createdAt: now,
-      updatedAt: now
-    });
-
-    await db.collection(COLLECTIONS.dailyAssignments).doc(today).set({
-      conversationItemId: "conversation-1",
-      newsItemId: null,
-      publishedAt: now,
-      updatedAt: now
-    });
+describe("mission content API", () => {
+  it("uses Korea local date for mission date keys", () => {
+    expect(getKoreaDateKey(new Date("2026-04-22T16:00:00.000Z"))).toBe("2026-04-23");
   });
 
-  it("returns today's conversation item", async () => {
+  it("returns today's toy forest mission", async () => {
+    const db = getFirestoreClient();
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-red-car").set(missionDoc());
+
     const app = buildApp();
     const response = await app.inject({ method: "GET", url: "/api/home" });
+    const body = response.json();
 
     expect(response.statusCode).toBe(200);
-    expect(response.json().todayConversation.title).toBe("Client meeting opener");
-    expect(response.json().todayNews).toBeNull();
+    expect(body.todayMission.title).toBe("Find the red car");
+    expect(body.todayMission.isToday).toBe(true);
+    expect(body.todayMission.threeYearOld.listenText).toBe("red car");
   });
 
-  it("allows admin to publish today's news item", async () => {
+  it("returns today's mission deterministically by doc id", async () => {
     const db = getFirestoreClient();
-    await db.collection(COLLECTIONS.users).doc("admin-1").set({
-      email: "admin@banghub.kr",
-      passwordHash: hashPassword("password123"),
-      difficulty: "basic",
-      selectedTracks: ["conversation", "news"],
-      isAdmin: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-z").set(
+      missionDoc({
+        title: "Mission Z"
+      })
+    );
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-a").set(
+      missionDoc({
+        title: "Mission A"
+      })
+    );
 
     const app = buildApp();
-    const login = await app.inject({
-      method: "POST",
-      url: "/api/auth/login",
-      payload: { email: "admin@banghub.kr", password: "password123" }
-    });
-
-    const cookieHeader = login.headers["set-cookie"];
-    const sessionCookie = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader ?? "";
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/admin/content",
-      headers: { cookie: sessionCookie },
-      payload: {
-        id: "news-1",
-        track: "news",
-        difficulty: "basic",
-        title: "Market update",
-        passage: "Stocks rose after the central bank kept rates unchanged.",
-        vocabulary: [{ term: "unchanged", meaning: "not changed" }],
-        question: "What happened to rates?",
-        answer: "They stayed the same.",
-        ttsText: "Stocks rose after the central bank kept rates unchanged.",
-        publishStatus: "published",
-        isToday: true
-      }
-    });
+    const response = await app.inject({ method: "GET", url: "/api/home" });
+    const body = response.json();
 
     expect(response.statusCode).toBe(200);
-    expect(response.json().saved.track).toBe("news");
+    expect(body.todayMission.id).toBe("mission-a");
+    expect(body.todayMission.title).toBe("Mission A");
   });
 
-  it("returns a content item by track and id", async () => {
+  it("returns mission detail by id", async () => {
+    const db = getFirestoreClient();
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-detail").set(
+      missionDoc({
+        title: "Jump together",
+        targetWord: "jump",
+        phrase: "jump",
+        sentence: "Let's jump.",
+        sixYearOld: {
+          promptKo: "Listen and repeat.",
+          listenText: "Let's jump.",
+          activityType: "repeat-after-me",
+          choices: [],
+          correctChoiceId: null
+        }
+      })
+    );
+
     const app = buildApp();
-    const response = await app.inject({
-      method: "GET",
-      url: "/api/content/conversation/conversation-1"
-    });
+    const response = await app.inject({ method: "GET", url: "/api/missions/mission-detail" });
+    const body = response.json();
 
     expect(response.statusCode).toBe(200);
-    expect(response.json().item.id).toBe("conversation-1");
+    expect(body.item.id).toBe("mission-detail");
+    expect(body.item.sixYearOld.listenText).toBe("Let's jump.");
   });
 });
