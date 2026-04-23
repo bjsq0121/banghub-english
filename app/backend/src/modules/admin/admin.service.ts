@@ -13,10 +13,14 @@ export async function saveDailyMission(payload: unknown) {
 
   const db = getFirestoreClient();
   const now = new Date().toISOString();
+  const docRef = db.collection(COLLECTIONS.dailyMissions).doc(parsed.id);
+  const existing = await docRef.get();
+  const existingCreatedAt = existing.data()?.createdAt;
+  const createdAt = typeof existingCreatedAt === "string" ? existingCreatedAt : now;
 
-  await db.collection(COLLECTIONS.dailyMissions).doc(parsed.id).set({
+  await docRef.set({
     ...missionData,
-    createdAt: now,
+    createdAt,
     updatedAt: now
   });
 

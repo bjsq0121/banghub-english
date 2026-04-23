@@ -215,6 +215,43 @@ describe("mission content API", () => {
     });
   });
 
+  it("preserves createdAt and bumps updatedAt when admin updates an existing mission", async () => {
+    const db = getFirestoreClient();
+    const original = {
+      ...missionDoc({ title: "Original" }),
+      createdAt: "2026-04-20T00:00:00.000Z",
+      updatedAt: "2026-04-20T00:00:00.000Z"
+    };
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-edit").set(original);
+
+    const app = buildApp();
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { email: "admin@banghub.kr", password: "password123" }
+    });
+    const cookieHeader = login.headers["set-cookie"];
+    const sessionCookie = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader ?? "";
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/admin/missions",
+      headers: { cookie: sessionCookie },
+      payload: missionDoc({ id: "mission-edit", title: "Edited", isToday: false })
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const saved = (await db.collection(COLLECTIONS.dailyMissions).doc("mission-edit").get()).data() as {
+      title: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    expect(saved.title).toBe("Edited");
+    expect(saved.createdAt).toBe("2026-04-20T00:00:00.000Z");
+    expect(saved.updatedAt).not.toBe("2026-04-20T00:00:00.000Z");
+  });
+
   it("returns 400 for invalid admin mission payloads", async () => {
     const app = buildApp();
     const login = await app.inject({
