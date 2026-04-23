@@ -1,18 +1,20 @@
 import { z } from "zod";
-import { difficultySchema, trackSchema } from "./content";
+import { childModeSchema } from "./content";
 
 export const userProfileSchema = z.object({
   id: z.string(),
   email: z.string().email(),
-  difficulty: difficultySchema,
-  selectedTracks: z.array(trackSchema),
+  difficulty: z.enum(["intro", "basic", "intermediate"]),
+  selectedTracks: z.array(z.string()),
   isAdmin: z.boolean()
 });
 
 export const completionSchema = z.object({
   userId: z.string(),
-  contentId: z.string(),
-  completedOn: z.string()
+  missionId: z.string(),
+  childMode: childModeSchema,
+  completedOn: z.string(),
+  rewardId: z.string()
 });
 
 export type UserProfile = z.infer<typeof userProfileSchema>;

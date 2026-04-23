@@ -1,12 +1,15 @@
 import { z } from "zod";
+import { childModeSchema, dailyMissionSchema, difficultySchema } from "./content";
 import { completionSchema, userProfileSchema } from "./user";
-import { conversationItemSchema, difficultySchema, newsItemSchema, trackSchema } from "./content";
 
 export const homeResponseSchema = z.object({
   viewer: userProfileSchema.nullable(),
-  todayConversation: conversationItemSchema.nullable(),
-  todayNews: newsItemSchema.nullable(),
+  todayMission: dailyMissionSchema.nullable(),
   completions: z.array(completionSchema)
+});
+
+export const missionDetailResponseSchema = z.object({
+  item: dailyMissionSchema
 });
 
 export const loginRequestSchema = z.object({
@@ -16,14 +19,16 @@ export const loginRequestSchema = z.object({
 
 export const updatePreferencesSchema = z.object({
   difficulty: difficultySchema,
-  selectedTracks: z.array(trackSchema).min(1)
+  selectedTracks: z.array(z.string()).min(1)
 });
 
 export const markCompletionSchema = z.object({
-  contentId: z.string()
+  missionId: z.string(),
+  childMode: childModeSchema
 });
 
 export type HomeResponse = z.infer<typeof homeResponseSchema>;
+export type MissionDetailResponse = z.infer<typeof missionDetailResponseSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type UpdatePreferencesRequest = z.infer<typeof updatePreferencesSchema>;
 export type MarkCompletionRequest = z.infer<typeof markCompletionSchema>;
