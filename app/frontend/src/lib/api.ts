@@ -1,8 +1,8 @@
 import type {
-  ConversationItem,
+  ChildMode,
   HomeResponse,
   MarkCompletionRequest,
-  NewsItem,
+  MissionDetailResponse,
   UpdatePreferencesRequest
 } from "@banghub/shared";
 
@@ -13,17 +13,17 @@ export async function getHome(): Promise<HomeResponse> {
   return response.json();
 }
 
-export async function getContentItem(track: "conversation" | "news", id: string) {
-  const response = await fetch(`${API_BASE}/api/content/${track}/${id}`, {
+export async function getMission(id: string): Promise<MissionDetailResponse["item"]> {
+  const response = await fetch(`${API_BASE}/api/missions/${id}`, {
     credentials: "include"
   });
 
   if (!response.ok) {
-    throw new Error(response.status === 404 ? "Content not found" : "Failed to load content");
+    throw new Error(response.status === 404 ? "Mission not found" : "Failed to load mission");
   }
 
   const payload = await response.json();
-  return payload.item as ConversationItem | NewsItem;
+  return payload.item as MissionDetailResponse["item"];
 }
 
 export async function login(email: string, password: string) {
@@ -57,4 +57,16 @@ export async function markCompletion(payload: MarkCompletionRequest) {
   });
 
   return response.json();
+}
+
+export function getChildModeLabel(childMode: ChildMode) {
+  if (childMode === "age3") {
+    return "3세";
+  }
+
+  if (childMode === "age6") {
+    return "6세";
+  }
+
+  return "같이";
 }

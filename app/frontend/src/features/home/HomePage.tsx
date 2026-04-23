@@ -1,6 +1,6 @@
 import type { HomeResponse } from "@banghub/shared";
+import { Link } from "react-router-dom";
 import { EmptyState } from "../common/EmptyState";
-import { TrackCard } from "../common/TrackCard";
 
 type HomePageProps = {
   data: HomeResponse;
@@ -10,31 +10,24 @@ export function HomePage({ data }: HomePageProps) {
   return (
     <main className="page">
       <header className="hero">
-        <p>Daily 10-minute routine</p>
-        <h1>Today's English</h1>
+        <p>Daily toy forest routine</p>
+        <h1>오늘의 미션</h1>
       </header>
 
       <section className="grid">
-        {data.todayConversation ? (
-          <TrackCard
-            heading="Today's Conversation"
-            title={data.todayConversation.title}
-            description={data.todayConversation.situation}
-            to={`/conversation/${data.todayConversation.id}`}
-          />
+        {data.todayMission ? (
+          <article className="track-card">
+            <p>{data.todayMission.theme}</p>
+            <h2>{data.todayMission.title}</h2>
+            <p>{data.todayMission.dadGuideKo}</p>
+            <div>
+              <Link to={`/mission/${data.todayMission.id}/age3`}>3세랑 하기</Link>
+              <Link to={`/mission/${data.todayMission.id}/age6`}>6세랑 하기</Link>
+              <Link to={`/mission/${data.todayMission.id}/together`}>같이 하기</Link>
+            </div>
+          </article>
         ) : (
-          <EmptyState title="Today's Conversation" body="Conversation content will appear here." />
-        )}
-
-        {data.todayNews ? (
-          <TrackCard
-            heading="Today's News"
-            title={data.todayNews.title}
-            description={data.todayNews.passage}
-            to={`/news/${data.todayNews.id}`}
-          />
-        ) : (
-          <EmptyState title="Today's News" body="News content will appear here." />
+          <EmptyState title="오늘의 미션" body="오늘 준비된 미션이 아직 없어요." />
         )}
       </section>
     </main>

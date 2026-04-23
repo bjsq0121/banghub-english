@@ -1,6 +1,20 @@
-import type { NewsItem, UserProfile } from "@banghub/shared";
+import type { UserProfile } from "@banghub/shared";
 import { speak } from "../../lib/tts";
 import { CompletionButton } from "../common/CompletionButton";
+
+type NewsItem = {
+  id?: string;
+  track?: string;
+  difficulty?: string;
+  title: string;
+  passage: string;
+  vocabulary: Array<{ term: string; meaning: string }>;
+  question: string;
+  answer: string;
+  ttsText: string;
+  publishStatus?: string;
+  isToday?: boolean;
+};
 
 type NewsPageProps = {
   item: NewsItem;

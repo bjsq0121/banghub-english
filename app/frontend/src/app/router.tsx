@@ -1,45 +1,40 @@
 import { createBrowserRouter, useLoaderData } from "react-router-dom";
+import type { ChildMode } from "@banghub/shared";
 import { AppShell } from "./AppShell";
 import { AdminPage } from "../features/admin/AdminPage";
 import { LoginPage } from "../features/auth/LoginPage";
 import { ErrorPage } from "../features/common/ErrorPage";
 import { HomePage } from "../features/home/HomePage";
-import { ConversationPage } from "../features/conversation/ConversationPage";
-import { NewsPage } from "../features/news/NewsPage";
+import { MissionPage } from "../features/mission/MissionPage";
 import { DifficultyPage } from "../features/onboarding/DifficultyPage";
-import { getContentItem, getHome, markCompletion } from "../lib/api";
+import { getHome, getMission, markCompletion } from "../lib/api";
 
 function HomeRoute() {
   const data = useLoaderData() as Awaited<ReturnType<typeof getHome>>;
   return <HomePage data={data} />;
 }
 
-function ConversationRoute() {
-  const data = useLoaderData() as {
-    item: Awaited<ReturnType<typeof getContentItem>>;
-    viewer: Awaited<ReturnType<typeof getHome>>["viewer"];
-  };
+function normalizeChildMode(childMode: string | undefined): ChildMode {
+  if (childMode === "age3" || childMode === "age6" || childMode === "together") {
+    return childMode;
+  }
 
-  return (
-    <ConversationPage
-      item={data.item as Extract<typeof data.item, { track: "conversation" }>}
-      viewer={data.viewer}
-      onComplete={async () => markCompletion({ contentId: data.item.id })}
-    />
-  );
+  return "together";
 }
 
-function NewsRoute() {
+function MissionRoute() {
   const data = useLoaderData() as {
-    item: Awaited<ReturnType<typeof getContentItem>>;
+    mission: Awaited<ReturnType<typeof getMission>>;
     viewer: Awaited<ReturnType<typeof getHome>>["viewer"];
+    childMode: ChildMode;
   };
 
   return (
-    <NewsPage
-      item={data.item as Extract<typeof data.item, { track: "news" }>}
+    <MissionPage
+      mission={data.mission}
+      childMode={data.childMode}
       viewer={data.viewer}
-      onComplete={async () => markCompletion({ contentId: data.item.id })}
+      onComplete={async () => markCompletion({ missionId: data.mission.id, childMode: data.childMode })}
     />
   );
 }
@@ -56,30 +51,18 @@ export const router = createBrowserRouter([
         element: <HomeRoute />
       },
       {
-        path: "conversation/:id",
+        path: "mission/:id/:childMode",
         loader: async ({ params }) => {
           const home = await getHome();
-          const item = await getContentItem("conversation", params.id ?? "");
+          const mission = await getMission(params.id ?? "");
 
           return {
-            item,
-            viewer: home.viewer
+            mission,
+            viewer: home.viewer,
+            childMode: normalizeChildMode(params.childMode)
           };
         },
-        element: <ConversationRoute />
-      },
-      {
-        path: "news/:id",
-        loader: async ({ params }) => {
-          const home = await getHome();
-          const item = await getContentItem("news", params.id ?? "");
-
-          return {
-            item,
-            viewer: home.viewer
-          };
-        },
-        element: <NewsRoute />
+        element: <MissionRoute />
       },
       { path: "login", element: <LoginPage /> },
       { path: "difficulty", element: <DifficultyPage /> },

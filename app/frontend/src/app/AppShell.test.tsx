@@ -11,9 +11,9 @@ describe("AppShell", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: "Login" })).toHaveAttribute("href", "/login");
-    expect(screen.getByRole("link", { name: "Level" })).toHaveAttribute("href", "/difficulty");
-    expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute("href", "/admin");
+    expect(screen.getByRole("link", { name: "오늘 미션" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: "난이도" })).toHaveAttribute("href", "/difficulty");
+    expect(screen.getByRole("link", { name: "관리" })).toHaveAttribute("href", "/admin");
   });
 });
