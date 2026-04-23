@@ -1,0 +1,7 @@
+-- Reference schema for the MVP JSON datastore.
+-- users:
+--   id, email, password, difficulty, selected_tracks, is_admin
+-- content_items:
+--   id, track, difficulty, title, payload_json, publish_status, is_today
+-- completions:
+--   user_id, content_id, completed_on
