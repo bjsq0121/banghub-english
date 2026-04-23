@@ -6,7 +6,7 @@ export function getConfig() {
     adminEmail: process.env.ADMIN_EMAIL ?? "admin@banghub.kr",
     adminPassword: process.env.ADMIN_PASSWORD ?? "change-me",
     firestoreProjectId: process.env.FIRESTORE_PROJECT_ID ?? "banghub-english-local",
-    firestoreEmulatorHost: process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8080",
+    firestoreEmulatorHost: process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:9080",
     useFirestoreEmulator: process.env.USE_FIRESTORE_EMULATOR !== "false"
   };
 }

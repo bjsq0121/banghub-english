@@ -14,7 +14,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number) {
 
 export async function clearFirestore() {
   const db = getFirestoreClient();
-  const collections = await withTimeout(db.listCollections(), 1500);
+  const collections = await withTimeout(db.listCollections(), 8000);
 
   for (const collection of collections) {
     const snapshot = await collection.get();
