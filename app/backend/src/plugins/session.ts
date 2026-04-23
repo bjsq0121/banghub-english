@@ -27,9 +27,10 @@ export function clearSession(reply: FastifyReply) {
   reply.clearCookie("session", { path: "/" });
 }
 
-export function requireSession(request: FastifyRequest) {
+export function requireSession(request: FastifyRequest, reply: FastifyReply) {
   if (!request.sessionUserId) {
-    throw new Error("UNAUTHORIZED");
+    reply.code(401);
+    return null;
   }
 
   return request.sessionUserId;
