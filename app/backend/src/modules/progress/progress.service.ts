@@ -6,16 +6,17 @@ import { getFirestoreClient } from "../../db/firestore";
 export async function markCompletion(userId: string, missionId: string, childMode: ChildMode) {
   const db = getFirestoreClient();
   const now = new Date();
+  const completedOn = getKoreaDateKey(now);
 
   await db
     .collection(COLLECTIONS.users)
     .doc(userId)
     .collection("completions")
-    .doc(`${missionId}-${childMode}`)
+    .doc(`${completedOn}-${missionId}-${childMode}`)
     .set({
       missionId,
       childMode,
-      completedOn: getKoreaDateKey(now),
+      completedOn,
       rewardId: `sticker-${childMode}`,
       createdAt: now.toISOString()
     });
