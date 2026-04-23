@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getChildModeLabel, getMission, markCompletion } from "./api";
+import { getChildModeLabel, getHome, getMission, login, markCompletion } from "./api";
 
 describe("api", () => {
   afterEach(() => {
@@ -19,6 +19,32 @@ describe("api", () => {
     await expect(getMission("missing-id")).rejects.toThrow("Mission not found");
   });
 
+  it("throws when home loading fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+        json: async () => ({ message: "Unavailable" })
+      })
+    );
+
+    await expect(getHome()).rejects.toThrow("Failed to load home");
+  });
+
+  it("throws on failed login", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: "Invalid credentials" })
+      })
+    );
+
+    await expect(login("dad@example.com", "bad-password")).rejects.toThrow("Invalid credentials");
+  });
+
   it("posts mission completion payload", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -26,7 +52,9 @@ describe("api", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await markCompletion({ missionId: "mission-1", childMode: "age6" });
+    await expect(markCompletion({ missionId: "mission-1", childMode: "age6" })).resolves.toEqual({
+      rewardId: "reward-1"
+    });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:4000/api/progress/completions",

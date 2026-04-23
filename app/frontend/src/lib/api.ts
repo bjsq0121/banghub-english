@@ -1,6 +1,7 @@
 import type {
   ChildMode,
   HomeResponse,
+  LoginRequest,
   MarkCompletionRequest,
   MissionDetailResponse,
   UpdatePreferencesRequest
@@ -8,9 +9,31 @@ import type {
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 
+async function readJson<T>(
+  response: Response,
+  fallbackMessage: string,
+  options: { useResponseMessage?: boolean } = { useResponseMessage: true }
+): Promise<T> {
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      options.useResponseMessage !== false &&
+      typeof payload === "object" &&
+      payload !== null &&
+      "message" in payload &&
+      typeof payload.message === "string"
+        ? payload.message
+        : fallbackMessage;
+    throw new Error(message);
+  }
+
+  return payload as T;
+}
+
 export async function getHome(): Promise<HomeResponse> {
   const response = await fetch(`${API_BASE}/api/home`, { credentials: "include" });
-  return response.json();
+  return readJson<HomeResponse>(response, "Failed to load home", { useResponseMessage: false });
 }
 
 export async function getMission(id: string): Promise<MissionDetailResponse["item"]> {
@@ -18,15 +41,20 @@ export async function getMission(id: string): Promise<MissionDetailResponse["ite
     credentials: "include"
   });
 
-  if (!response.ok) {
-    throw new Error(response.status === 404 ? "Mission not found" : "Failed to load mission");
-  }
-
-  const payload = await response.json();
+  const payload = await readJson<MissionDetailResponse>(
+    response,
+    response.status === 404 ? "Mission not found" : "Failed to load mission",
+    { useResponseMessage: false }
+  );
   return payload.item as MissionDetailResponse["item"];
 }
 
-export async function login(email: string, password: string) {
+type LoginResponse = {
+  user?: HomeResponse["viewer"];
+  message?: string;
+};
+
+export async function login(email: LoginRequest["email"], password: LoginRequest["password"]) {
   const response = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     credentials: "include",
@@ -34,7 +62,7 @@ export async function login(email: string, password: string) {
     body: JSON.stringify({ email, password })
   });
 
-  return response.json();
+  return readJson<LoginResponse>(response, "Login failed");
 }
 
 export async function updatePreferences(payload: UpdatePreferencesRequest) {
@@ -45,7 +73,7 @@ export async function updatePreferences(payload: UpdatePreferencesRequest) {
     body: JSON.stringify(payload)
   });
 
-  return response.json();
+  return readJson<{ ok: boolean }>(response, "Failed to update preferences");
 }
 
 export async function markCompletion(payload: MarkCompletionRequest) {
@@ -56,7 +84,7 @@ export async function markCompletion(payload: MarkCompletionRequest) {
     body: JSON.stringify(payload)
   });
 
-  return response.json();
+  return readJson<{ ok: boolean }>(response, "Failed to save completion");
 }
 
 export function getChildModeLabel(childMode: ChildMode) {

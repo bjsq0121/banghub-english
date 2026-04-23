@@ -35,10 +35,12 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const selectedChoice = childMission.choices.find((choice) => choice.id === selectedChoiceId);
   const canComplete = childMission.correctChoiceId === null || selectedChoice?.isCorrect === true;
   const fallbackText = childMode === "age3" ? childMission.listenText : mission.sentence;
+  const speechRate = childMode === "age3" ? 0.6 : 0.82;
 
   return (
     <main className="page mission-page">
@@ -55,7 +57,7 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
           <img src={mission.image.url} alt={mission.image.alt} width="320" />
           <h2>Listen</h2>
           <p className="english-line">{childMission.listenText}</p>
-          <button onClick={() => playMissionAudio(getAudioUrl(mission, childMode), fallbackText)}>
+          <button onClick={() => playMissionAudio(getAudioUrl(mission, childMode), fallbackText, { rate: speechRate })}>
             Listen
           </button>
         </article>
@@ -92,21 +94,31 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
 
           <button
             type="button"
+            disabled={isSaving}
             onClick={async () => {
+              if (isSaving) {
+                return;
+              }
+
               if (!canComplete) {
                 setMessage("정답을 고른 뒤 완료해 주세요.");
                 return;
               }
 
-              if (viewer) {
-                await onComplete();
-              }
+              setIsSaving(true);
+              try {
+                if (viewer) {
+                  await onComplete();
+                }
 
-              setIsComplete(true);
-              setMessage(mission.encouragement);
+                setIsComplete(true);
+                setMessage(mission.encouragement);
+              } finally {
+                setIsSaving(false);
+              }
             }}
           >
-            완료
+            {isSaving ? "저장 중" : "완료"}
           </button>
 
           {viewer ? null : <p>로그인하지 않아도 오늘 활동을 마칠 수 있어요.</p>}

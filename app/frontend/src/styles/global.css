@@ -204,7 +204,7 @@ a {
   border-radius: 8px;
   background: #f7fbff;
   color: #182028;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.25;
   text-align: center;
@@ -226,9 +226,10 @@ a {
 
 .choice.selected,
 .choice[aria-pressed="true"] {
-  border-color: #e8463f;
-  background: #fff3a3;
-  box-shadow: inset 0 0 0 2px #ffd84d;
+  border-color: #1b5e20;
+  background: #d7f5cf;
+  color: #102a16;
+  box-shadow: inset 0 0 0 2px #4fa85a;
 }
 
 .choice img {

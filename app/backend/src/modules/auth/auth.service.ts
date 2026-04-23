@@ -38,7 +38,7 @@ export async function loginUser(email: string, password: string) {
     email: string;
     passwordHash?: string;
     difficulty: "intro" | "basic" | "intermediate";
-    selectedTracks: Array<"conversation" | "news">;
+    selectedTracks: string[];
     isAdmin: boolean;
   };
 
@@ -66,7 +66,7 @@ export async function getViewerById(userId: string) {
   const user = doc.data() as {
     email: string;
     difficulty: "intro" | "basic" | "intermediate";
-    selectedTracks: Array<"conversation" | "news">;
+    selectedTracks: string[];
     isAdmin: boolean;
   };
 

@@ -80,4 +80,34 @@ describe("MissionPage", () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(await screen.findByText("좋았어! 숲속 기차를 찾았네.")).toBeInTheDocument();
   });
+
+  it("prevents duplicate completion clicks while saving", async () => {
+    let resolveCompletion: () => void = () => undefined;
+    const onComplete = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveCompletion = resolve;
+        })
+    );
+    const viewer: UserProfile = {
+      id: "user-1",
+      email: "dad@example.com",
+      difficulty: "basic",
+      selectedTracks: ["mission"],
+      isAdmin: false
+    };
+
+    render(<MissionPage mission={mission} childMode="age6" viewer={viewer} onComplete={onComplete} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "I see a little train." }));
+    const completeButton = screen.getByRole("button", { name: "완료" });
+    fireEvent.click(completeButton);
+    fireEvent.click(screen.getByRole("button", { name: "저장 중" }));
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "저장 중" })).toBeDisabled();
+
+    resolveCompletion();
+    expect(await screen.findByText("좋았어! 숲속 기차를 찾았네.")).toBeInTheDocument();
+  });
 });

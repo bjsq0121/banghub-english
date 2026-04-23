@@ -9,7 +9,7 @@ export const missionActivityTypeSchema = z.enum(["tap-choice", "act-it-out", "re
 export const missionChoiceSchema = z.object({
   id: z.string(),
   label: z.string(),
-  imageUrl: z.string().optional(),
+  imageUrl: z.string().url().or(z.string().startsWith("/")).optional(),
   isCorrect: z.boolean()
 });
 
@@ -54,14 +54,14 @@ export const childMissionSchema = z
   });
 
 export const missionImageSchema = z.object({
-  url: z.string(),
+  url: z.string().url().or(z.string().startsWith("/")),
   alt: z.string()
 });
 
 export const missionAudioSchema = z.object({
-  wordUrl: z.string().nullable(),
-  phraseUrl: z.string().nullable(),
-  sentenceUrl: z.string().nullable()
+  wordUrl: z.string().url().or(z.string().startsWith("/")).nullable(),
+  phraseUrl: z.string().url().or(z.string().startsWith("/")).nullable(),
+  sentenceUrl: z.string().url().or(z.string().startsWith("/")).nullable()
 });
 
 export const dailyMissionSchema = z.object({

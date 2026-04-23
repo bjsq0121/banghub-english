@@ -5,7 +5,7 @@ export const userProfileSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   difficulty: z.enum(["intro", "basic", "intermediate"]),
-  selectedTracks: z.array(z.string()),
+  selectedTracks: z.array(z.string()).min(1),
   isAdmin: z.boolean()
 });
 

@@ -1,4 +1,4 @@
-import { createBrowserRouter, useLoaderData } from "react-router-dom";
+import { createBrowserRouter, redirect, useLoaderData } from "react-router-dom";
 import type { ChildMode } from "@banghub/shared";
 import { AppShell } from "./AppShell";
 import { AdminPage } from "../features/admin/AdminPage";
@@ -34,7 +34,9 @@ function MissionRoute() {
       mission={data.mission}
       childMode={data.childMode}
       viewer={data.viewer}
-      onComplete={async () => markCompletion({ missionId: data.mission.id, childMode: data.childMode })}
+      onComplete={async () => {
+        await markCompletion({ missionId: data.mission.id, childMode: data.childMode });
+      }}
     />
   );
 }
@@ -53,8 +55,7 @@ export const router = createBrowserRouter([
       {
         path: "mission/:id/:childMode",
         loader: async ({ params }) => {
-          const home = await getHome();
-          const mission = await getMission(params.id ?? "");
+          const [home, mission] = await Promise.all([getHome(), getMission(params.id ?? "")]);
 
           return {
             mission,
@@ -66,7 +67,19 @@ export const router = createBrowserRouter([
       },
       { path: "login", element: <LoginPage /> },
       { path: "difficulty", element: <DifficultyPage /> },
-      { path: "admin", element: <AdminPage /> }
+      {
+        path: "admin",
+        loader: async () => {
+          const home = await getHome();
+
+          if (!home.viewer?.isAdmin) {
+            throw redirect("/login");
+          }
+
+          return null;
+        },
+        element: <AdminPage />
+      }
     ]
   }
 ]);

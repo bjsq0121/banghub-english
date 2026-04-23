@@ -7,8 +7,13 @@ export function LoginPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const result = await login(String(form.get("email")), String(form.get("password")));
-    setMessage(result.user ? "Logged in." : "Login failed.");
+
+    try {
+      const result = await login(String(form.get("email")), String(form.get("password")));
+      setMessage(result.user ? "Logged in." : "Login failed.");
+    } catch {
+      setMessage("Login failed.");
+    }
   }
 
   return (
