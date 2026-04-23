@@ -20,6 +20,28 @@ function parseMissionDocument(
   });
 }
 
+function getSortableUpdatedAt(doc: FirebaseFirestore.QueryDocumentSnapshot) {
+  const data = doc.data() as { updatedAt?: unknown; createdAt?: unknown };
+  return typeof data.updatedAt === "string"
+    ? data.updatedAt
+    : typeof data.createdAt === "string"
+      ? data.createdAt
+      : "";
+}
+
+function compareTodayMissionDocs(
+  left: FirebaseFirestore.QueryDocumentSnapshot,
+  right: FirebaseFirestore.QueryDocumentSnapshot
+) {
+  const updatedAtComparison = getSortableUpdatedAt(right).localeCompare(getSortableUpdatedAt(left));
+
+  if (updatedAtComparison !== 0) {
+    return updatedAtComparison;
+  }
+
+  return left.id.localeCompare(right.id);
+}
+
 export async function getTodayMission() {
   const db = getFirestoreClient();
   const today = todayKey();
@@ -29,7 +51,7 @@ export async function getTodayMission() {
     .where("publishStatus", "==", "published")
     .get();
 
-  const doc = [...snapshot.docs].sort((left, right) => left.id.localeCompare(right.id))[0];
+  const doc = [...snapshot.docs].sort(compareTodayMissionDocs)[0];
 
   if (!doc) {
     return null;

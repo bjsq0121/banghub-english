@@ -73,16 +73,24 @@ describe("mission content API", () => {
     expect(body.todayMission.threeYearOld.listenText).toBe("red car");
   });
 
-  it("returns today's mission deterministically by doc id", async () => {
+  it("returns today's mission deterministically by updated time and doc id", async () => {
     const db = getFirestoreClient();
     await db.collection(COLLECTIONS.dailyMissions).doc("mission-z").set(
       missionDoc({
-        title: "Mission Z"
+        title: "Mission Z",
+        updatedAt: "2026-04-23T00:00:00.000Z"
       })
     );
     await db.collection(COLLECTIONS.dailyMissions).doc("mission-a").set(
       missionDoc({
-        title: "Mission A"
+        title: "Mission A",
+        updatedAt: "2026-04-23T00:00:00.000Z"
+      })
+    );
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-m").set(
+      missionDoc({
+        title: "Mission M",
+        updatedAt: "2026-04-23T00:01:00.000Z"
       })
     );
 
@@ -91,8 +99,8 @@ describe("mission content API", () => {
     const body = response.json();
 
     expect(response.statusCode).toBe(200);
-    expect(body.todayMission.id).toBe("mission-a");
-    expect(body.todayMission.title).toBe("Mission A");
+    expect(body.todayMission.id).toBe("mission-m");
+    expect(body.todayMission.title).toBe("Mission M");
   });
 
   it("returns mission detail by id", async () => {
@@ -123,6 +131,14 @@ describe("mission content API", () => {
   });
 
   it("publishes a daily mission from an admin session", async () => {
+    const db = getFirestoreClient();
+    await db.collection(COLLECTIONS.dailyMissions).doc("mission-red-car").set(
+      missionDoc({
+        title: "Existing seeded mission",
+        updatedAt: "2026-04-23T00:00:00.000Z"
+      })
+    );
+
     const app = buildApp();
     const login = await app.inject({
       method: "POST",
@@ -155,7 +171,6 @@ describe("mission content API", () => {
       isToday: true
     });
 
-    const db = getFirestoreClient();
     const saved = await db.collection(COLLECTIONS.dailyMissions).doc("mission-admin-publish").get();
     expect(saved.data()).toMatchObject({
       dateKey: getKoreaDateKey(),
