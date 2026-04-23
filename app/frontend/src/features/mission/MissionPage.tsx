@@ -41,8 +41,8 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
   const fallbackText = childMode === "age3" ? childMission.listenText : mission.sentence;
 
   return (
-    <main className="page">
-      <header className="hero">
+    <main className="page mission-page">
+      <header className="hero mission-hero">
         <p>{mission.theme}</p>
         <h1>{mission.title}</h1>
         <p>
@@ -51,29 +51,30 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
       </header>
 
       <section className="grid">
-        <article className="track-card">
+        <article className="track-card mission-character">
           <img src={mission.image.url} alt={mission.image.alt} width="320" />
           <h2>Listen</h2>
-          <p>{childMission.listenText}</p>
+          <p className="english-line">{childMission.listenText}</p>
           <button onClick={() => playMissionAudio(getAudioUrl(mission, childMode), fallbackText)}>
             Listen
           </button>
         </article>
 
-        <article className="track-card">
+        <article className="track-card mission-panel dad-guide">
           <h2>아빠 가이드</h2>
           <p>{mission.dadGuideKo}</p>
         </article>
 
-        <article className="track-card">
+        <article className="track-card mission-panel reward-panel">
           <h2>{childMode === "together" ? "같이 해보기" : "아이 활동"}</h2>
           <p>{childMission.promptKo}</p>
 
           {childMission.choices.length > 0 ? (
-            <div>
+            <div className="choice-grid">
               {childMission.choices.map((choice) => (
                 <button
                   key={choice.id}
+                  className={`choice${choice.id === selectedChoiceId ? " selected" : ""}`}
                   type="button"
                   aria-pressed={choice.id === selectedChoiceId}
                   onClick={() => {

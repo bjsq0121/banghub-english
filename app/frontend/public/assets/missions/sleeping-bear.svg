@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Sleeping toy bear</title>
+  <desc id="desc">A soft toy bear sleeping under trees in a calm toy forest.</desc>
+  <rect width="320" height="240" fill="#dff5ff"/>
+  <circle cx="260" cy="48" r="22" fill="#ffd84d"/>
+  <path d="M0 176c44-18 82-18 124 0 38 16 80 18 120 0 30-14 56-14 76 0v64H0z" fill="#74c96c"/>
+  <rect x="42" y="76" width="30" height="100" rx="15" fill="#58a95d"/>
+  <circle cx="57" cy="70" r="25" fill="#83d57a"/>
+  <rect x="244" y="76" width="30" height="100" rx="15" fill="#58a95d"/>
+  <circle cx="259" cy="70" r="25" fill="#83d57a"/>
+  <ellipse cx="158" cy="158" rx="76" ry="44" fill="#9f7449"/>
+  <circle cx="114" cy="122" r="33" fill="#b58355"/>
+  <circle cx="92" cy="102" r="16" fill="#9f7449"/>
+  <circle cx="136" cy="101" r="16" fill="#9f7449"/>
+  <circle cx="92" cy="102" r="8" fill="#ffd7a6"/>
+  <circle cx="136" cy="101" r="8" fill="#ffd7a6"/>
+  <ellipse cx="114" cy="130" rx="16" ry="12" fill="#ffd7a6"/>
+  <path d="M101 119c8 7 18 7 26 0" fill="none" stroke="#26323c" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="114" cy="126" r="4" fill="#26323c"/>
+  <path d="M176 109h24m-10-16h22m-6-16h20" fill="none" stroke="#347fc9" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="154" cy="194" rx="88" ry="12" fill="#4fa85a"/>
+</svg>
