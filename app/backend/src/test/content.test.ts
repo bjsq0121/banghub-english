@@ -1,33 +1,34 @@
+import "./test-firestore";
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../app";
-import { db } from "../db/client";
+import { COLLECTIONS } from "../db/collections";
+import { getFirestoreClient } from "../db/firestore";
 import { hashPassword } from "../modules/auth/auth.service";
 
 describe("home content API", () => {
-  beforeEach(() => {
-    db.reset();
-    db.write((state) => {
-      state.content_items.push({
-        id: "conversation-1",
-        track: "conversation",
-        difficulty: "basic",
-        title: "Client meeting opener",
-        payload_json: JSON.stringify({
-          id: "conversation-1",
-          track: "conversation",
-          difficulty: "basic",
-          title: "Client meeting opener",
-          situation: "You are starting a weekly client call.",
-          prompt: "Greet the client and confirm the agenda.",
-          answer: "Thanks for joining. Shall we quickly confirm today's agenda?",
-          alternatives: ["Thanks for making time today.", "Can we start by reviewing the agenda?"],
-          ttsText: "Thanks for joining. Shall we quickly confirm today's agenda?",
-          publishStatus: "published",
-          isToday: true
-        }),
-        publish_status: "published",
-        is_today: 1
-      });
+  beforeEach(async () => {
+    const db = getFirestoreClient();
+    const now = new Date().toISOString();
+    const today = new Date().toISOString().slice(0, 10);
+
+    await db.collection(COLLECTIONS.conversationItems).doc("conversation-1").set({
+      title: "Client meeting opener",
+      difficulty: "basic",
+      situation: "You are starting a weekly client call.",
+      prompt: "Greet the client and confirm the agenda.",
+      answer: "Thanks for joining. Shall we quickly confirm today's agenda?",
+      alternatives: ["Thanks for making time today.", "Can we start by reviewing the agenda?"],
+      ttsText: "Thanks for joining. Shall we quickly confirm today's agenda?",
+      publishStatus: "published",
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await db.collection(COLLECTIONS.dailyAssignments).doc(today).set({
+      conversationItemId: "conversation-1",
+      newsItemId: null,
+      publishedAt: now,
+      updatedAt: now
     });
   });
 
@@ -41,15 +42,15 @@ describe("home content API", () => {
   });
 
   it("allows admin to publish today's news item", async () => {
-    db.write((state) => {
-      state.users.push({
-        id: "admin-1",
-        email: "admin@banghub.kr",
-        password: hashPassword("password123"),
-        difficulty: "basic",
-        selected_tracks: JSON.stringify(["conversation", "news"]),
-        is_admin: 1
-      });
+    const db = getFirestoreClient();
+    await db.collection(COLLECTIONS.users).doc("admin-1").set({
+      email: "admin@banghub.kr",
+      passwordHash: hashPassword("password123"),
+      difficulty: "basic",
+      selectedTracks: ["conversation", "news"],
+      isAdmin: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
 
     const app = buildApp();

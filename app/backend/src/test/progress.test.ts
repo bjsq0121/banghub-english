@@ -1,20 +1,21 @@
+import "./test-firestore";
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../app";
-import { db } from "../db/client";
+import { COLLECTIONS } from "../db/collections";
+import { getFirestoreClient } from "../db/firestore";
 import { hashPassword } from "../modules/auth/auth.service";
 
 describe("completion API", () => {
-  beforeEach(() => {
-    db.reset();
-    db.write((state) => {
-      state.users.push({
-        id: "user-1",
-        email: "user@banghub.kr",
-        password: hashPassword("password123"),
-        difficulty: "basic",
-        selected_tracks: JSON.stringify(["conversation", "news"]),
-        is_admin: 0
-      });
+  beforeEach(async () => {
+    const db = getFirestoreClient();
+    await db.collection(COLLECTIONS.users).doc("user-1").set({
+      email: "user@banghub.kr",
+      passwordHash: hashPassword("password123"),
+      difficulty: "basic",
+      selectedTracks: ["conversation", "news"],
+      isAdmin: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
   });
 
@@ -36,7 +37,13 @@ describe("completion API", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(db.read().completions).toHaveLength(1);
-    expect(db.read().completions[0]?.user_id).toBe("user-1");
+    const db = getFirestoreClient();
+    const completion = await db
+      .collection(COLLECTIONS.users)
+      .doc("user-1")
+      .collection("completions")
+      .doc("conversation-1")
+      .get();
+    expect(completion.exists).toBe(true);
   });
 });

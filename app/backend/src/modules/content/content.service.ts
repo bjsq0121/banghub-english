@@ -1,32 +1,68 @@
 import { conversationItemSchema, newsItemSchema } from "@banghub/shared";
-import { db } from "../../db/client";
+import { COLLECTIONS } from "../../db/collections";
+import { getFirestoreClient } from "../../db/firestore";
 
-export function getTodayContent() {
-  const state = db.read();
-  const conversationRow = state.content_items.find(
-    (row) => row.track === "conversation" && row.publish_status === "published" && row.is_today === 1
-  );
-  const newsRow = state.content_items.find(
-    (row) => row.track === "news" && row.publish_status === "published" && row.is_today === 1
-  );
+export async function getTodayContent() {
+  const db = getFirestoreClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const assignmentDoc = await db.collection(COLLECTIONS.dailyAssignments).doc(today).get();
+
+  if (!assignmentDoc.exists) {
+    return {
+      todayConversation: null,
+      todayNews: null
+    };
+  }
+
+  const assignment = assignmentDoc.data() as {
+    conversationItemId?: string | null;
+    newsItemId?: string | null;
+  };
+
+  const conversationDoc = assignment.conversationItemId
+    ? await db.collection(COLLECTIONS.conversationItems).doc(assignment.conversationItemId).get()
+    : null;
+  const newsDoc = assignment.newsItemId
+    ? await db.collection(COLLECTIONS.newsItems).doc(assignment.newsItemId).get()
+    : null;
 
   return {
-    todayConversation: conversationRow
-      ? conversationItemSchema.parse(JSON.parse(conversationRow.payload_json))
+    todayConversation: conversationDoc?.exists
+      ? conversationItemSchema.parse({
+          id: conversationDoc.id,
+          track: "conversation",
+          ...conversationDoc.data()
+        })
       : null,
-    todayNews: newsRow ? newsItemSchema.parse(JSON.parse(newsRow.payload_json)) : null
+    todayNews: newsDoc?.exists
+      ? newsItemSchema.parse({
+          id: newsDoc.id,
+          track: "news",
+          ...newsDoc.data()
+        })
+      : null
   };
 }
 
-export function getContentById(track: "conversation" | "news", id: string) {
-  const row = db.read().content_items.find((entry) => entry.track === track && entry.id === id);
+export async function getContentById(track: "conversation" | "news", id: string) {
+  const db = getFirestoreClient();
+  const collection =
+    track === "conversation" ? COLLECTIONS.conversationItems : COLLECTIONS.newsItems;
+  const doc = await db.collection(collection).doc(id).get();
 
-  if (!row) {
+  if (!doc.exists) {
     return null;
   }
 
-  const parsed = JSON.parse(row.payload_json);
   return track === "conversation"
-    ? conversationItemSchema.parse(parsed)
-    : newsItemSchema.parse(parsed);
+    ? conversationItemSchema.parse({
+        id: doc.id,
+        track: "conversation",
+        ...doc.data()
+      })
+    : newsItemSchema.parse({
+        id: doc.id,
+        track: "news",
+        ...doc.data()
+      });
 }

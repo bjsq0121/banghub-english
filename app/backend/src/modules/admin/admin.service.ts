@@ -1,35 +1,39 @@
 import { conversationItemSchema, newsItemSchema } from "@banghub/shared";
-import { db } from "../../db/client";
+import { COLLECTIONS } from "../../db/collections";
+import { getFirestoreClient } from "../../db/firestore";
 
-export function saveContentItem(payload: unknown) {
+export async function saveContentItem(payload: unknown) {
   const parsed =
     typeof payload === "object" && payload && (payload as { track?: string }).track === "conversation"
       ? conversationItemSchema.parse(payload)
       : newsItemSchema.parse(payload);
 
-  db.write((state) => {
-    state.content_items = state.content_items.map((entry) =>
-      entry.track === parsed.track ? { ...entry, is_today: 0 } : entry
-    );
+  const db = getFirestoreClient();
+  const now = new Date().toISOString();
+  const today = new Date().toISOString().slice(0, 10);
+  const collection =
+    parsed.track === "conversation" ? COLLECTIONS.conversationItems : COLLECTIONS.newsItems;
 
-    const nextRow = {
-      id: parsed.id,
-      track: parsed.track,
-      difficulty: parsed.difficulty,
-      title: parsed.title,
-      payload_json: JSON.stringify(parsed),
-      publish_status: parsed.publishStatus,
-      is_today: parsed.isToday ? 1 : 0
-    };
-
-    const existingIndex = state.content_items.findIndex((entry) => entry.id === parsed.id);
-
-    if (existingIndex >= 0) {
-      state.content_items[existingIndex] = nextRow;
-    } else {
-      state.content_items.push(nextRow);
-    }
+  await db.collection(collection).doc(parsed.id).set({
+    ...parsed,
+    createdAt: now,
+    updatedAt: now
   });
+
+  if (parsed.isToday) {
+    await db.collection(COLLECTIONS.dailyAssignments).doc(today).set(
+      parsed.track === "conversation"
+        ? {
+            conversationItemId: parsed.id,
+            updatedAt: now
+          }
+        : {
+            newsItemId: parsed.id,
+            updatedAt: now
+          },
+      { merge: true }
+    );
+  }
 
   return parsed;
 }

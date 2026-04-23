@@ -6,7 +6,7 @@ import { loginUser, updatePreferences } from "./auth.service";
 export async function registerAuthRoutes(app: FastifyInstance) {
   app.post("/api/auth/login", async (request, reply) => {
     const { email, password } = loginRequestSchema.parse(request.body);
-    const user = loginUser(email, password);
+    const user = await loginUser(email, password);
 
     if (!user) {
       reply.code(401);
@@ -30,7 +30,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       return { message: "Unauthorized" };
     }
 
-    updatePreferences(userId, payload.difficulty, payload.selectedTracks);
+    await updatePreferences(userId, payload.difficulty, payload.selectedTracks);
     return { ok: true };
   });
 }

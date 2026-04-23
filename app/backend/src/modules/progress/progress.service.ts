@@ -1,31 +1,31 @@
-import { db } from "../../db/client";
+import { COLLECTIONS } from "../../db/collections";
+import { getFirestoreClient } from "../../db/firestore";
 
-export function markCompletion(userId: string, contentId: string) {
-  db.write((state) => {
-    const existing = state.completions.find(
-      (entry) => entry.user_id === userId && entry.content_id === contentId
-    );
-
-    if (existing) {
-      existing.completed_on = new Date().toISOString().slice(0, 10);
-      return;
-    }
-
-    state.completions.push({
-      user_id: userId,
-      content_id: contentId,
-      completed_on: new Date().toISOString().slice(0, 10)
+export async function markCompletion(userId: string, contentId: string) {
+  const db = getFirestoreClient();
+  await db
+    .collection(COLLECTIONS.users)
+    .doc(userId)
+    .collection("completions")
+    .doc(contentId)
+    .set({
+      contentId,
+      completedOn: new Date().toISOString().slice(0, 10),
+      createdAt: new Date().toISOString()
     });
-  });
 }
 
-export function listCompletions(userId: string) {
-  return db
-    .read()
-    .completions.filter((entry) => entry.user_id === userId)
-    .map((entry) => ({
-      userId: entry.user_id,
-      contentId: entry.content_id,
-      completedOn: entry.completed_on
-    }));
+export async function listCompletions(userId: string) {
+  const db = getFirestoreClient();
+  const snapshot = await db.collection(COLLECTIONS.users).doc(userId).collection("completions").get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data() as { contentId: string; completedOn: string };
+
+    return {
+      userId,
+      contentId: data.contentId,
+      completedOn: data.completedOn
+    };
+  });
 }

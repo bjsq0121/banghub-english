@@ -1,3 +1,4 @@
+import "./test-firestore";
 import { describe, expect, it } from "vitest";
 import { buildApp } from "../app";
 

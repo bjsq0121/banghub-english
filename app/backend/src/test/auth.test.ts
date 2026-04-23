@@ -1,28 +1,31 @@
+import "./test-firestore";
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../app";
-import { db } from "../db/client";
+import { COLLECTIONS } from "../db/collections";
+import { getFirestoreClient } from "../db/firestore";
 import { hashPassword } from "../modules/auth/auth.service";
 
 describe("auth and session security", () => {
-  beforeEach(() => {
-    db.reset();
-    db.write((state) => {
-      state.users.push({
-        id: "user-1",
-        email: "user@banghub.kr",
-        password: hashPassword("password123"),
-        difficulty: "basic",
-        selected_tracks: JSON.stringify(["conversation", "news"]),
-        is_admin: 0
-      });
+  beforeEach(async () => {
+    const db = getFirestoreClient();
+    await db.collection(COLLECTIONS.users).doc("user-1").set({
+      email: "user@banghub.kr",
+      passwordHash: hashPassword("password123"),
+      difficulty: "basic",
+      selectedTracks: ["conversation", "news"],
+      isAdmin: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
   });
 
-  it("stores hashed passwords instead of plaintext", () => {
-    const saved = db.read().users[0];
+  it("stores hashed passwords instead of plaintext", async () => {
+    const db = getFirestoreClient();
+    const saved = await db.collection(COLLECTIONS.users).doc("user-1").get();
+    const data = saved.data() as { passwordHash: string };
 
-    expect(saved?.password).not.toBe("password123");
-    expect(saved?.password).toContain(":");
+    expect(data.passwordHash).not.toBe("password123");
+    expect(data.passwordHash).toContain(":");
   });
 
   it("rejects forged session cookies", async () => {
@@ -35,6 +38,8 @@ describe("auth and session security", () => {
     });
 
     expect(response.statusCode).toBe(401);
-    expect(db.read().completions).toHaveLength(0);
+    const db = getFirestoreClient();
+    const snapshot = await db.collection(COLLECTIONS.users).doc("user-1").collection("completions").get();
+    expect(snapshot.empty).toBe(true);
   });
 });

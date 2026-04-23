@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { db } from "../../db/client";
+import { COLLECTIONS } from "../../db/collections";
+import { getFirestoreClient } from "../../db/firestore";
 import { requireSession } from "../../plugins/session";
 import { saveContentItem } from "./admin.service";
 
@@ -11,13 +12,15 @@ export async function registerAdminRoutes(app: FastifyInstance) {
       return { message: "Unauthorized" };
     }
 
-    const user = db.read().users.find((entry) => entry.id === userId);
+    const db = getFirestoreClient();
+    const userDoc = await db.collection(COLLECTIONS.users).doc(userId).get();
+    const user = userDoc.data() as { isAdmin?: boolean } | undefined;
 
-    if (!user?.is_admin) {
+    if (!user?.isAdmin) {
       reply.code(403);
       return { message: "Forbidden" };
     }
 
-    return { saved: saveContentItem(request.body) };
+    return { saved: await saveContentItem(request.body) };
   });
 }
