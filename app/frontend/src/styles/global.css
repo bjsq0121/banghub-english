@@ -125,10 +125,40 @@ a {
   opacity: 1;
 }
 
+.character-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 3px solid #27313b;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 0;
+  line-height: 1;
+  opacity: 1;
+  background: #5aa9d8;
+}
+
+.character-avatar-fallback[data-character="robo"] {
+  background: #5aa9d8;
+}
+
+.character-avatar-fallback[data-character="dino"] {
+  background: #4fa85a;
+}
+
+.character-avatar-fallback[data-character="bunny"] {
+  background: #f298b8;
+}
+
 @media (min-width: 720px) {
   .character-avatar {
     width: 96px;
     height: 96px;
+  }
+  .character-avatar-fallback {
+    font-size: 40px;
   }
 }
 

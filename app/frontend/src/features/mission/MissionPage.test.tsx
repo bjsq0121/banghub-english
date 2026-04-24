@@ -54,6 +54,7 @@ describe("MissionPage", () => {
 
     expect(screen.getByRole("heading", { name: "Find the Little Train" })).toBeInTheDocument();
     expect(screen.getByText("아빠는 기차 장난감을 가리키며 천천히 말해 주세요.")).toBeInTheDocument();
+    expect(screen.getByText("Robo · 6세")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "I see a little train." }));
     fireEvent.click(screen.getByRole("button", { name: "완료" }));
