@@ -109,6 +109,7 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
       roles/iam.serviceAccountUser \
       roles/cloudbuild.builds.editor \
       roles/artifactregistry.writer \
+      roles/storage.admin \
       roles/firebasehosting.admin \
       roles/firebaserules.admin \
       roles/datastore.user \
@@ -211,8 +212,10 @@ image if Docker is installed. All green means the branch is deployable.
 ### Option A — GitHub Actions (recommended)
 
 Once Workload Identity Federation is configured, every push to `main` triggers
-`.github/workflows/deploy.yml`: test → build → deploy backend and
-frontend in parallel. Manual re-run: Actions tab → Deploy → Run workflow.
+`.github/workflows/deploy.yml`: test → deploy backend → deploy frontend.
+Frontend waits for the Cloud Run service so the very first production deploy
+does not race the Hosting rewrite against a missing backend. Manual re-run:
+Actions tab → Deploy → Run workflow.
 
 ### Option B — Manual from a dev machine
 
@@ -221,8 +224,10 @@ Only use when CI is blocked. Requires `gcloud auth login` and
 
 **Backend image → Artifact Registry via Cloud Build**
 ```
+SHORT_SHA="$(git rev-parse --short HEAD)"
 gcloud builds submit \
   --config cloudbuild.yaml \
+  --substitutions "_IMAGE_TAG=${SHORT_SHA}" \
   --project banghub-english-prod \
   .
 ```

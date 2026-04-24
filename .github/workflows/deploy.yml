@@ -68,18 +68,21 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      - name: Set image tag
+        run: echo "IMAGE_TAG=$(echo "$GITHUB_SHA" | cut -c1-7)" >> "$GITHUB_ENV"
+
       - name: Build backend image with Cloud Build
         run: |
           gcloud builds submit \
             --config cloudbuild.yaml \
+            --substitutions "_IMAGE_TAG=$IMAGE_TAG" \
             --project "$GCP_PROJECT_ID" \
             .
 
       - name: Deploy to Cloud Run
         run: |
-          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           gcloud run deploy "$CLOUD_RUN_SERVICE" \
-            --image "asia-northeast3-docker.pkg.dev/$GCP_PROJECT_ID/banghub/backend:$SHORT_SHA" \
+            --image "asia-northeast3-docker.pkg.dev/$GCP_PROJECT_ID/banghub/backend:$IMAGE_TAG" \
             --region "$GCP_REGION" \
             --project "$GCP_PROJECT_ID" \
             --service-account "$CLOUD_RUN_RUNTIME_SA" \
@@ -89,7 +92,9 @@ jobs:
             --set-secrets "SESSION_SECRET=SESSION_SECRET:latest,ADMIN_PASSWORD=ADMIN_PASSWORD:latest"
 
   deploy-frontend:
-    needs: test
+    needs:
+      - test
+      - deploy-backend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

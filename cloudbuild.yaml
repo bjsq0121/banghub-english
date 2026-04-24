@@ -3,7 +3,7 @@ steps:
     args:
       - build
       - --file=app/backend/Dockerfile
-      - --tag=asia-northeast3-docker.pkg.dev/$PROJECT_ID/banghub/backend:$SHORT_SHA
+      - --tag=asia-northeast3-docker.pkg.dev/$PROJECT_ID/banghub/backend:${_IMAGE_TAG}
       - .
 images:
-  - asia-northeast3-docker.pkg.dev/$PROJECT_ID/banghub/backend:$SHORT_SHA
+  - asia-northeast3-docker.pkg.dev/$PROJECT_ID/banghub/backend:${_IMAGE_TAG}
