@@ -6,9 +6,24 @@ type CharacterAvatarProps = {
   character: MissionCharacter;
 };
 
+type AvatarStatus = "loading" | "loaded" | "error";
+
 export function CharacterAvatar({ character }: CharacterAvatarProps) {
-  const [loaded, setLoaded] = useState(false);
+  const [status, setStatus] = useState<AvatarStatus>("loading");
   const asset = getCharacterAsset(character);
+
+  if (status === "error") {
+    return (
+      <span
+        className="character-avatar character-avatar-fallback"
+        data-character={character}
+        role="img"
+        aria-label={asset.alt}
+      >
+        {asset.initial}
+      </span>
+    );
+  }
 
   return (
     <img
@@ -17,9 +32,9 @@ export function CharacterAvatar({ character }: CharacterAvatarProps) {
       alt={asset.alt}
       width={96}
       height={96}
-      data-loaded={loaded}
-      onLoad={() => setLoaded(true)}
-      onError={() => setLoaded(false)}
+      data-loaded={status === "loaded"}
+      onLoad={() => setStatus("loaded")}
+      onError={() => setStatus("error")}
     />
   );
 }

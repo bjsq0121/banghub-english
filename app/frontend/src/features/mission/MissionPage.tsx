@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ChildMission, ChildMode, DailyMission, UserProfile } from "@banghub/shared";
 import { getChildModeLabel } from "../../lib/api";
+import { getCharacterDisplayName } from "../../lib/characters";
 import { playMissionAudio } from "../../lib/tts";
 import { CharacterAvatar } from "../common/CharacterAvatar";
 
@@ -52,7 +53,7 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
             <p>{mission.theme}</p>
             <h1>{mission.title}</h1>
             <p>
-              {mission.character} · {getChildModeLabel(childMode)}
+              {getCharacterDisplayName(mission.character)} · {getChildModeLabel(childMode)}
             </p>
           </div>
         </div>
