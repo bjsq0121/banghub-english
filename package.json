@@ -11,6 +11,7 @@
     "lint": "pnpm -r lint",
     "build": "pnpm -r build",
     "emulator:start": "./scripts/firestore/start-emulator.sh",
-    "emulator:exec:test": "./scripts/firestore/run-emulator-tests.sh"
+    "emulator:exec:test": "./scripts/firestore/run-emulator-tests.sh",
+    "deploy:check": "./scripts/deploy-check.sh"
   }
 }

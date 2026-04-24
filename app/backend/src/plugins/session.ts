@@ -28,6 +28,7 @@ export function setSession(reply: FastifyReply, userId: string) {
     httpOnly: true,
     path: "/",
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     signed: true
   });
 }
