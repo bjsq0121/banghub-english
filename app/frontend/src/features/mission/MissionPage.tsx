@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { ChildMission, ChildMode, DailyMission, UserProfile } from "@banghub/shared";
 import { getChildModeLabel } from "../../lib/api";
 import { playMissionAudio } from "../../lib/tts";
+import { CharacterAvatar } from "../common/CharacterAvatar";
 
 type MissionPageProps = {
   mission: DailyMission;
@@ -45,11 +46,16 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
   return (
     <main className="page mission-page">
       <header className="hero mission-hero">
-        <p>{mission.theme}</p>
-        <h1>{mission.title}</h1>
-        <p>
-          {mission.character} · {getChildModeLabel(childMode)}
-        </p>
+        <div className="mission-hero-intro">
+          <CharacterAvatar character={mission.character} />
+          <div>
+            <p>{mission.theme}</p>
+            <h1>{mission.title}</h1>
+            <p>
+              {mission.character} · {getChildModeLabel(childMode)}
+            </p>
+          </div>
+        </div>
       </header>
 
       <section className="grid">

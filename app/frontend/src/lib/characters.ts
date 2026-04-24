@@ -1,0 +1,25 @@
+import type { MissionCharacter } from "@banghub/shared";
+
+type CharacterAsset = {
+  src: string;
+  alt: string;
+};
+
+export const CHARACTER_ASSETS: Record<MissionCharacter, CharacterAsset> = {
+  robo: {
+    src: "/assets/characters/robo.png",
+    alt: "Robo the friendly robot"
+  },
+  dino: {
+    src: "/assets/characters/dino.png",
+    alt: "Dino the playful dinosaur"
+  },
+  bunny: {
+    src: "/assets/characters/bunny.png",
+    alt: "Bunny the encourager"
+  }
+};
+
+export function getCharacterAsset(character: MissionCharacter) {
+  return CHARACTER_ASSETS[character];
+}
