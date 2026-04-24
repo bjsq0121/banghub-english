@@ -156,41 +156,57 @@ character in the right direction.
 
 ### Technical specs per deliverable
 
-| Deliverable | Canvas | Aspect | Transparent? | Format |
-| --- | --- | --- | --- | --- |
-| Portrait (phase 1) | 1024 × 1024 | 1:1 | yes (PNG) | `.png` |
-| Avatar render (derived from portrait) | 256 × 256, generated at build time from the same PNG | 1:1 | yes | served as PNG |
-| Scene (phase 2) | 1024 × 768 | 4:3 | no (colored background) | `.png` |
-| Mission SVG replacement (optional fallback) | 320 × 240 | 4:3 | no | `.svg` only if handmade |
+| Deliverable | Canvas | Aspect | Transparent? | Format | Target size | Hard cap |
+| --- | --- | --- | --- | --- | --- | --- |
+| Portrait (phase 1) | 1024 × 1024 | 1:1 | yes | `.png` or `.webp` | ~200 KB | 350 KB |
+| Avatar render (derived from portrait) | 256 × 256, downsampled client-side from the same portrait | 1:1 | yes | same as portrait | n/a | n/a |
+| Scene (phase 2) | 1024 × 768 | 4:3 | no (colored background) | `.png` or `.webp` | ~250 KB | 450 KB |
+| Mission SVG replacement (optional fallback) | 320 × 240 | 4:3 | no | `.svg` only if handmade | n/a | n/a |
+
+Size notes:
+- "Target size" is what a compressed PNG/WebP of this kind of flat
+  illustration typically lands at (e.g., Imagen 3 PNG output run
+  through `squoosh` or `oxipng -O2`). If a portrait comes back at
+  600 KB, compress before committing.
+- "Hard cap" is the refusal line — if compression can't get the file
+  under it without visible quality damage, reduce the canvas or
+  simplify the prompt (fewer fine strokes, larger solid areas).
+- WebP is preferred when the source is a photorealistic-ish render
+  from Imagen; PNG when the output is closer to true vector with flat
+  regions. Either format is fine — the `<img>` tag renders both.
 
 ## Folder structure
 
+Served assets (published via Firebase Hosting):
 ```
 app/frontend/public/assets/
   characters/
-    robo.png              # Phase 1 portrait, 1024x1024, transparent
+    robo.png              # Phase 1 portrait, 1024x1024
     dino.png
     bunny.png
   missions/
     (existing mission scene art)
-  _sources/               # git-tracked prompts + raw seeds. Not served.
-    characters/
-      robo.prompt.md
-      dino.prompt.md
-      bunny.prompt.md
-    missions/
-      <mission-id>.prompt.md   # populated in Phase 2
+```
+
+Non-served sources (git-tracked docs, never in the deploy bundle):
+```
+docs/ai-prompts/
+  characters/
+    robo.prompt.md
+    dino.prompt.md
+    bunny.prompt.md
+  missions/
+    <mission-id>.prompt.md   # populated in Phase 2
 ```
 
 Notes:
-- `_sources/` is published because it sits under `public/`, but the
-  directory name starts with `_` so it is easy to ignore in a later
-  build step if we want to keep it out of deploy. For now we leave it
-  accessible; the content is harmless.
-- An alternative is to move `_sources/` to `docs/assets/` outside
-  `public/`. If we end up with many prompt files, migrate there.
-- Scene prompts live next to the scene art so a future contributor can
-  regenerate a specific mission without excavating git history.
+- Keeping prompts under `docs/` instead of `public/` means they never
+  ship to end users and never inflate the Hosting payload, while still
+  living next to the generated artefacts in review (filenames pair:
+  `robo.png` ↔ `docs/ai-prompts/characters/robo.prompt.md`).
+- Scene prompts live in `docs/ai-prompts/missions/` so a future
+  contributor can regenerate a specific mission without excavating git
+  history.
 
 ### File naming rules
 
@@ -385,9 +401,10 @@ Not implemented in this doc; captured here so the shape is agreed:
 
 When Phase 1 is done and this design has earned its keep:
 
-- [ ] `app/frontend/public/assets/characters/robo.png`, `dino.png`,
-      `bunny.png` exist, each 1024 × 1024, under 200 kB each.
-- [ ] Paired `_sources/characters/<name>.prompt.md` committed.
+- [ ] `app/frontend/public/assets/characters/robo.{png,webp}`,
+      `dino.{png,webp}`, `bunny.{png,webp}` exist, each 1024 × 1024,
+      targeting ~200 KB with a 350 KB hard cap.
+- [ ] Paired `docs/ai-prompts/characters/<name>.prompt.md` committed.
 - [ ] `MissionPage` renders the character portrait as a small avatar
       next to the character name, and degrades gracefully if the file
       is missing.
