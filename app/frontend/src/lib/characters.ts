@@ -7,15 +7,15 @@ type CharacterAsset = {
 
 export const CHARACTER_ASSETS: Record<MissionCharacter, CharacterAsset> = {
   robo: {
-    src: "/assets/characters/robo.png",
+    src: "/assets/characters/robo.svg",
     alt: "Robo the friendly robot"
   },
   dino: {
-    src: "/assets/characters/dino.png",
+    src: "/assets/characters/dino.svg",
     alt: "Dino the playful dinosaur"
   },
   bunny: {
-    src: "/assets/characters/bunny.png",
+    src: "/assets/characters/bunny.svg",
     alt: "Bunny the encourager"
   }
 };
