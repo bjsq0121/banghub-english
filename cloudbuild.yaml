@@ -1,0 +1,9 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --file=app/backend/Dockerfile
+      - --tag=asia-northeast3-docker.pkg.dev/$PROJECT_ID/banghub/backend:$SHORT_SHA
+      - .
+images:
+  - asia-northeast3-docker.pkg.dev/$PROJECT_ID/banghub/backend:$SHORT_SHA

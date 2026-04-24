@@ -24,6 +24,9 @@ Browser ── https://english.banghub.kr (or banghub-english-prod.web.app fallb
   before creating.
 - **Backend**: Cloud Run service `banghub-backend`. The container comes
   from `app/backend/Dockerfile`.
+- **Image build path**: GitHub Actions submits `cloudbuild.yaml`, which
+  builds `app/backend/Dockerfile` with repo-root context and pushes the
+  image to Artifact Registry before Cloud Run deploys it.
 - **GitHub deploy auth**: GitHub Actions uses Workload Identity
   Federation against the deploy SA. Long-lived JSON keys are blocked by
   org policy and are not used.
@@ -108,7 +111,8 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
       roles/artifactregistry.writer \
       roles/firebasehosting.admin \
       roles/firebaserules.admin \
-      roles/datastore.user
+      roles/datastore.user \
+      roles/serviceusage.serviceUsageConsumer
   do
     gcloud projects add-iam-policy-binding banghub-english-prod \
       --member="serviceAccount:$DEPLOY_SA" --role="$role"
@@ -215,11 +219,19 @@ frontend in parallel. Manual re-run: Actions tab → Deploy → Run workflow.
 Only use when CI is blocked. Requires `gcloud auth login` and
 `firebase login` as a human with owner-level access.
 
+**Backend image → Artifact Registry via Cloud Build**
+```
+gcloud builds submit \
+  --config cloudbuild.yaml \
+  --project banghub-english-prod \
+  .
+```
+
 **Backend → Cloud Run**
 ```
+SHORT_SHA="$(git rev-parse --short HEAD)"
 gcloud run deploy banghub-backend \
-  --source . \
-  --dockerfile app/backend/Dockerfile \
+  --image "asia-northeast3-docker.pkg.dev/banghub-english-prod/banghub/backend:${SHORT_SHA}" \
   --region asia-northeast3 \
   --project banghub-english-prod \
   --service-account banghub-backend@banghub-english-prod.iam.gserviceaccount.com \

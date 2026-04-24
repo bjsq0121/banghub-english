@@ -68,11 +68,18 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      - name: Build backend image with Cloud Build
+        run: |
+          gcloud builds submit \
+            --config cloudbuild.yaml \
+            --project "$GCP_PROJECT_ID" \
+            .
+
       - name: Deploy to Cloud Run
         run: |
+          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           gcloud run deploy "$CLOUD_RUN_SERVICE" \
-            --source . \
-            --dockerfile app/backend/Dockerfile \
+            --image "asia-northeast3-docker.pkg.dev/$GCP_PROJECT_ID/banghub/backend:$SHORT_SHA" \
             --region "$GCP_REGION" \
             --project "$GCP_PROJECT_ID" \
             --service-account "$CLOUD_RUN_RUNTIME_SA" \
