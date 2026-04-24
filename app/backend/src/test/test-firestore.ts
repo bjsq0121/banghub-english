@@ -1,26 +1,37 @@
 import { afterEach, beforeEach } from "vitest";
-import { getFirestoreClient } from "../db/firestore";
+import { getConfig } from "../config";
 
-async function withTimeout<T>(promise: Promise<T>, ms: number) {
-  return await Promise.race<T>([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error("Firestore Emulator is not reachable. Start it with `pnpm emulator:start` or run tests via `pnpm test`."));
-      }, ms);
-    })
-  ]);
+const CLEAR_TIMEOUT_MS = 8000;
+
+function emulatorClearUrl() {
+  const config = getConfig();
+  return `http://${config.firestoreEmulatorHost}/emulator/v1/projects/${config.firestoreProjectId}/databases/(default)/documents`;
 }
 
 export async function clearFirestore() {
-  const db = getFirestoreClient();
-  const collections = await withTimeout(db.listCollections(), 8000);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CLEAR_TIMEOUT_MS);
 
-  for (const collection of collections) {
-    const snapshot = await collection.get();
-    for (const doc of snapshot.docs) {
-      await db.recursiveDelete(doc.ref);
+  try {
+    const response = await fetch(emulatorClearUrl(), {
+      method: "DELETE",
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to clear Firestore Emulator (status ${response.status}). Start it with \`pnpm emulator:start\` or run tests via \`pnpm test\`.`
+      );
     }
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(
+        "Firestore Emulator is not reachable. Start it with `pnpm emulator:start` or run tests via `pnpm test`."
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
