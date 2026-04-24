@@ -11,11 +11,33 @@ full pipeline context.
 
 ## Pairing
 
-| Prompt | Image |
-| --- | --- |
-| `robo.prompt.md` | `app/frontend/public/assets/characters/robo.{png,webp}` |
-| `dino.prompt.md` | `app/frontend/public/assets/characters/dino.{png,webp}` |
-| `bunny.prompt.md` | `app/frontend/public/assets/characters/bunny.{png,webp}` |
+| Prompt | Image (current) | Image (target) |
+| --- | --- | --- |
+| `robo.prompt.md` | `robo.svg` (stopgap) | `robo.{png,webp}` |
+| `dino.prompt.md` | `dino.svg` (stopgap) | `dino.{png,webp}` |
+| `bunny.prompt.md` | `bunny.svg` (stopgap) | `bunny.{png,webp}` |
+
+All under `app/frontend/public/assets/characters/`.
+
+### Why SVG is the current state
+
+The three files shipping today are hand-authored SVGs that follow the
+design guide palette and silhouette targets. They render crisp at the
+64–96 px avatar display size and keep the app self-consistent until a
+human curator regenerates them via Vertex AI Imagen 3 (see the
+acceptance criteria in the design doc for the final PNG/WebP targets).
+
+Replacement flow when Imagen output is ready:
+
+1. Drop `robo.png` (or `.webp`) into `app/frontend/public/assets/characters/`.
+2. Edit `app/frontend/src/lib/characters.ts`: change the `.svg`
+   extension in the helper map to `.png` (or `.webp`). One-line per
+   character.
+3. Delete the old `.svg` stopgap.
+
+See also `preview.svg` in this directory — a composite rendering of
+the three stopgap portraits on the shared palette for one-world
+consistency checking.
 
 ## Shared style preamble
 
