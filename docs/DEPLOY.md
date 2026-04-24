@@ -127,7 +127,7 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
     --workload-identity-pool=github \
     --display-name="Banghub English GitHub Provider" \
     --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.ref=assertion.ref,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-    --attribute-condition='assertion.repository == "bjsq0121/banghub-english" && attribute.ref == "refs/heads/main"' \
+    --attribute-condition='assertion.repository == "bjsq0121/banghub-english" && assertion.ref == "refs/heads/main"' \
     --issuer-uri="https://token.actions.githubusercontent.com"
   ```
 - [ ] Allow the GitHub repo to impersonate the deploy SA:
