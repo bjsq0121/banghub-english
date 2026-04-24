@@ -108,8 +108,7 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
       roles/artifactregistry.writer \
       roles/firebasehosting.admin \
       roles/firebaserules.admin \
-      roles/datastore.user \
-      roles/secretmanager.admin
+      roles/datastore.user
   do
     gcloud projects add-iam-policy-binding banghub-english-prod \
       --member="serviceAccount:$DEPLOY_SA" --role="$role"
@@ -127,8 +126,8 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
     --location=global \
     --workload-identity-pool=github \
     --display-name="Banghub English GitHub Provider" \
-    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-    --attribute-condition='assertion.repository == "bjsq0121/banghub-english"' \
+    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.ref=assertion.ref,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+    --attribute-condition='assertion.repository == "bjsq0121/banghub-english" && attribute.ref == "refs/heads/main"' \
     --issuer-uri="https://token.actions.githubusercontent.com"
   ```
 - [ ] Allow the GitHub repo to impersonate the deploy SA:
@@ -246,6 +245,9 @@ The backend only creates the admin user when the seed script runs.
 After the first Cloud Run deploy, seed Firestore once from a trusted
 workstation that has user ADC configured:
 
+Prerequisite: your Google account needs Firestore write access.
+`roles/datastore.user` is sufficient; Owner/Editor already includes it.
+
 ```
 gcloud auth application-default login
 gcloud auth application-default set-quota-project banghub-english-prod
@@ -263,6 +265,15 @@ pnpm --filter @banghub/backend seed
 
 Run from a trusted workstation, not Cloud Run. No JSON key file is
 required or expected.
+
+If the TTS smoke test fails with 401/403, grant the runtime service
+account `roles/serviceusage.serviceUsageConsumer` and re-run the check:
+
+```
+gcloud projects add-iam-policy-binding banghub-english-prod \
+  --member="serviceAccount:banghub-backend@banghub-english-prod.iam.gserviceaccount.com" \
+  --role="roles/serviceusage.serviceUsageConsumer"
+```
 
 ### Smoke test
 
