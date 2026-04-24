@@ -1,6 +1,6 @@
 {
   "projects": {
     "default": "banghub-english-local",
-    "production": "REPLACE_WITH_GCP_PROJECT_ID"
+    "production": "banghub-english-prod"
   }
 }

@@ -1,0 +1,116 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: banghub-english-prod
+  GCP_REGION: asia-northeast3
+  CLOUD_RUN_SERVICE: banghub-backend
+  CLOUD_RUN_RUNTIME_SA: banghub-backend@banghub-english-prod.iam.gserviceaccount.com
+  APP_ORIGIN: https://english.banghub.kr
+  ADMIN_EMAIL: admin@banghub.kr
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Firestore Emulator jar
+        uses: actions/cache@v4
+        with:
+          path: .tools/firestore
+          key: firestore-emulator-v1.19.8
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm -r lint
+
+      - run: pnpm test
+
+      - run: pnpm -r build
+
+  deploy-backend:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "$CLOUD_RUN_SERVICE" \
+            --source . \
+            --dockerfile app/backend/Dockerfile \
+            --region "$GCP_REGION" \
+            --project "$GCP_PROJECT_ID" \
+            --service-account "$CLOUD_RUN_RUNTIME_SA" \
+            --allow-unauthenticated \
+            --port 8080 \
+            --set-env-vars "NODE_ENV=production,APP_ORIGIN=$APP_ORIGIN,ADMIN_EMAIL=$ADMIN_EMAIL,FIRESTORE_PROJECT_ID=$GCP_PROJECT_ID,USE_FIRESTORE_EMULATOR=false,GOOGLE_TTS_ENABLED=true,GOOGLE_TTS_VOICE=en-US-Neural2-F,GOOGLE_TTS_LANGUAGE=en-US" \
+            --set-secrets "SESSION_SECRET=SESSION_SECRET:latest,ADMIN_PASSWORD=ADMIN_PASSWORD:latest"
+
+  deploy-frontend:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @banghub/frontend build
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy Firebase Hosting and Firestore rules
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+        run: |
+          firebase deploy \
+            --only hosting,firestore:rules \
+            --project "$GCP_PROJECT_ID" \
+            --non-interactive

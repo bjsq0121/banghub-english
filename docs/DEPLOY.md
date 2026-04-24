@@ -1,171 +1,302 @@
 # Deploy
 
-Banghub English runs on Google Cloud + Firebase. Single user-facing origin
-via Firebase Hosting; the Fastify backend lives on Cloud Run and is reached
-through Hosting rewrites so cookies stay same-origin and no CORS is needed.
+Production runs on **Google Cloud project `banghub-english-prod`**, region
+**`asia-northeast3` (Seoul)**, with Firebase Hosting in front of Cloud Run
+so everything shares one origin.
 
 ## Architecture
 
 ```
-Browser ── https://<hosting-domain>
+Browser ── https://english.banghub.kr (or banghub-english-prod.web.app fallback)
              │
              ├── /            ─── Firebase Hosting (app/frontend/dist SPA)
-             ├── /assets/*    ─── Firebase Hosting (cached 1y)
-             └── /api/**      ─── Hosting rewrite → Cloud Run (banghub-backend)
+             ├── /assets/*    ─── Firebase Hosting (1y immutable cache)
+             └── /api/**      ─── Hosting rewrite → Cloud Run banghub-backend
                                     │
-                                    ├── Firestore (native, same GCP project)
+                                    ├── Firestore (native mode, same GCP project)
                                     └── Cloud Text-to-Speech
-
 ```
 
-- Frontend: Firebase Hosting, built with `pnpm --filter @banghub/frontend build`.
-- Backend: Cloud Run service `banghub-backend`, region `asia-northeast3`
-  (Seoul — change in `firebase.json` + `gcloud run deploy --region` if moving).
-  Source of truth for the container: `app/backend/Dockerfile`.
-- Data: production Firestore in the same GCP project. Client writes are
-  denied by `infra/firestore.rules`; the backend uses firebase-admin which
-  bypasses rules.
-- Auth: signed session cookies set by Fastify, same-origin so the browser
-  ships them on the rewrite to Cloud Run automatically.
-- TTS: Cloud Text-to-Speech API. Service account attached to Cloud Run
-  needs `roles/cloudtts.user`.
+- **Custom domain**: `english.banghub.kr` (primary, once DNS is live).
+  `banghub-english-prod.web.app` stays as the always-available Firebase
+  fallback.
+- **Region**: `asia-northeast3`. Firestore init is irreversible — confirm
+  before creating.
+- **Backend**: Cloud Run service `banghub-backend`. The container comes
+  from `app/backend/Dockerfile`.
+- **Secrets**: `SESSION_SECRET`, `ADMIN_PASSWORD` in Secret Manager. Never
+  in the repo. Code keeps `.env.example` placeholders only.
+- **Firestore rules**: default-deny. The backend uses firebase-admin which
+  bypasses rules; no direct client access is expected.
 
-## One-time external setup checklist
+---
 
-Items a human must do in a GCP/Firebase console or CLI. Nothing in the
-repo finishes the deploy alone.
+## External setup checklist (human-required)
 
-### GCP project
-- [ ] Create (or pick) a GCP project. Note its **project id** (not number).
-- [ ] Enable APIs:
-  - Firestore API (`firestore.googleapis.com`)
-  - Cloud Run Admin API (`run.googleapis.com`)
-  - Cloud Build API (`cloudbuild.googleapis.com`)
-  - Artifact Registry API (`artifactregistry.googleapis.com`)
-  - Cloud Text-to-Speech API (`texttospeech.googleapis.com`)
-  - Secret Manager API (`secretmanager.googleapis.com`)
-- [ ] Initialize Firestore in **Native mode** (one-time, irreversible; pick a region).
-- [ ] Create an Artifact Registry repo for the backend image, e.g.
-      `asia-northeast3-docker.pkg.dev/<project>/banghub`.
+Things the repo can't do on its own. Walk these top-to-bottom the first
+time; afterwards, only DNS changes or secret rotations need revisiting.
 
-### Firebase
-- [ ] Link the Firebase project to the same GCP project.
-- [ ] Note the Hosting site id (default matches project id → `*.web.app`).
-- [ ] If using a custom domain: add it in Firebase Hosting → Custom Domains,
-      complete the TXT + A record verification, wait for cert provisioning.
+### GCP project & APIs
+- [ ] Create project `banghub-english-prod` (GCP Console → New Project).
+- [ ] In that project, enable the APIs:
+  ```
+  gcloud services enable \
+    firestore.googleapis.com \
+    run.googleapis.com \
+    cloudbuild.googleapis.com \
+    artifactregistry.googleapis.com \
+    texttospeech.googleapis.com \
+    secretmanager.googleapis.com \
+    --project banghub-english-prod
+  ```
+- [ ] Initialize Firestore in **Native mode**, region
+      `asia-northeast3` (Firebase Console → Firestore Database → Create
+      database). This is irreversible; confirm region first.
+- [ ] Create an Artifact Registry repo for container images:
+  ```
+  gcloud artifacts repositories create banghub \
+    --repository-format=docker \
+    --location=asia-northeast3 \
+    --project banghub-english-prod
+  ```
 
-### Service account for Cloud Run
-The default Compute Engine SA works for a first deploy, but creating a
-dedicated one is cleaner.
-- [ ] Create SA `banghub-backend@<project>.iam.gserviceaccount.com`.
-- [ ] Grant roles:
-  - `roles/datastore.user` (Firestore read/write)
-  - `roles/cloudtts.user` (Text-to-Speech)
-  - `roles/secretmanager.secretAccessor` (pulls secrets as env)
-- [ ] Attach to the Cloud Run service at deploy time (`--service-account`).
+### Firebase project
+- [ ] In Firebase Console, **Add project → select existing GCP project
+      `banghub-english-prod`**. This links Firebase to the same project.
+- [ ] Confirm the default Hosting site id (matches project id →
+      `banghub-english-prod.web.app`).
 
-### Secrets (Secret Manager)
-Create these secrets; reference by name in `gcloud run deploy
---set-secrets`:
-- [ ] `SESSION_SECRET` — strong random (32+ bytes, `openssl rand -base64 48`)
-- [ ] `ADMIN_PASSWORD` — admin login password
+### Service accounts
+- [ ] Create the Cloud Run runtime SA (least privilege for the running
+      container):
+  ```
+  gcloud iam service-accounts create banghub-backend \
+    --display-name="Banghub Cloud Run runtime" \
+    --project banghub-english-prod
+  ```
+- [ ] Grant it runtime roles:
+  ```
+  SA="banghub-backend@banghub-english-prod.iam.gserviceaccount.com"
+  for role in \
+      roles/datastore.user \
+      roles/cloudtts.user \
+      roles/secretmanager.secretAccessor
+  do
+    gcloud projects add-iam-policy-binding banghub-english-prod \
+      --member="serviceAccount:$SA" --role="$role"
+  done
+  ```
+- [ ] Create the deploy SA (used by GitHub Actions to push builds):
+  ```
+  gcloud iam service-accounts create banghub-deployer \
+    --display-name="Banghub CI/CD deployer" \
+    --project banghub-english-prod
+  ```
+- [ ] Grant deploy roles:
+  ```
+  DEPLOY_SA="banghub-deployer@banghub-english-prod.iam.gserviceaccount.com"
+  for role in \
+      roles/run.admin \
+      roles/iam.serviceAccountUser \
+      roles/cloudbuild.builds.editor \
+      roles/artifactregistry.writer \
+      roles/firebasehosting.admin \
+      roles/firebaserules.admin \
+      roles/datastore.user
+  do
+    gcloud projects add-iam-policy-binding banghub-english-prod \
+      --member="serviceAccount:$DEPLOY_SA" --role="$role"
+  done
+  ```
+- [ ] Generate a JSON key for the deployer and save it (GitHub secret
+      target — do NOT commit):
+  ```
+  gcloud iam service-accounts keys create ~/banghub-deployer.json \
+    --iam-account=$DEPLOY_SA \
+    --project banghub-english-prod
+  ```
+  Upgrade path: replace the JSON key with Workload Identity Federation
+  when ready (see "Hardening", below).
 
-### Local config pointers
-- [ ] `.firebaserc` → replace `REPLACE_WITH_GCP_PROJECT_ID` with the real id.
-- [ ] Choose a Cloud Run region if not `asia-northeast3`; update
-      `firebase.json` rewrite `region` and the deploy command.
+### Secrets
+- [ ] Generate a session secret (store the output; you'll need it once):
+  ```
+  openssl rand -base64 48
+  ```
+- [ ] Generate the admin password:
+  ```
+  openssl rand -base64 24
+  ```
+- [ ] Create secrets in Secret Manager (paste each value at the prompt):
+  ```
+  printf "%s" "<paste-session-secret>" | \
+    gcloud secrets create SESSION_SECRET \
+      --data-file=- --project banghub-english-prod
+  printf "%s" "<paste-admin-password>" | \
+    gcloud secrets create ADMIN_PASSWORD \
+      --data-file=- --project banghub-english-prod
+  ```
+- [ ] Save the admin password in your password manager. There is no
+      recovery flow — you'll need it to log in as admin the first time.
 
-## Pre-deploy verification
+### Custom domain & DNS
 
-Run on every deploy, locally:
+**TODO — DNS provider not yet chosen.** Fill in once decided
+(Cloudflare / Route 53 / Google Domains / other). High-level flow:
+
+- [ ] In Firebase Console → Hosting → Add custom domain → enter
+      `english.banghub.kr`.
+- [ ] Firebase will issue a TXT challenge. Add it at the DNS provider.
+- [ ] After verification, Firebase will give A/AAAA (or ALIAS/CNAME)
+      records. Add them.
+- [ ] Wait for the managed certificate to provision (can take up to 24
+      hours).
+- [ ] Until the custom domain is live, use
+      `https://banghub-english-prod.web.app` — the code treats it as a
+      fallback; no config change needed.
+
+### GitHub Actions secrets (one-time)
+
+For `.github/workflows/deploy.yml` to work:
+
+- [ ] Repo → Settings → Secrets and variables → Actions → New repository
+      secret.
+- [ ] `GCP_SA_KEY` — paste the JSON contents of the `banghub-deployer`
+      key generated above.
+- [ ] (Optional) Protect the `main` branch with "Require status checks
+      to pass" so the deploy workflow must succeed before a merge is
+      possible via PR.
+
+---
+
+## Pre-deploy verification (local)
 
 ```
 ./scripts/deploy-check.sh
+# or:
+pnpm deploy:check
 ```
 
-What it does: workspace typecheck → build frontend+backend dists → full
-`pnpm test` (Firestore emulator) → if Docker is installed, container build
-of the backend image.
+What it does: workspace typecheck → build frontend + backend dists →
+full `pnpm test` (Firestore emulator) → Docker build of the backend
+image if Docker is installed. All green means the branch is deployable.
+
+---
 
 ## Deploy runbook
 
-After the checklist is done and `./scripts/deploy-check.sh` is green:
+### Option A — GitHub Actions (recommended)
 
-### 1. Backend → Cloud Run
+Once the `GCP_SA_KEY` secret is in place, every push to `main` triggers
+`.github/workflows/deploy.yml`: test → build → deploy backend and
+frontend in parallel. Manual re-run: Actions tab → Deploy → Run workflow.
+
+### Option B — Manual from a dev machine
+
+Only use when CI is blocked. Requires `gcloud auth login` and
+`firebase login` as a human with owner-level access.
+
+**Backend → Cloud Run**
 ```
 gcloud run deploy banghub-backend \
   --source . \
-  --source-ignore-file .dockerignore \
   --dockerfile app/backend/Dockerfile \
   --region asia-northeast3 \
-  --project <PROJECT_ID> \
-  --service-account banghub-backend@<PROJECT_ID>.iam.gserviceaccount.com \
+  --project banghub-english-prod \
+  --service-account banghub-backend@banghub-english-prod.iam.gserviceaccount.com \
   --allow-unauthenticated \
   --port 8080 \
-  --set-env-vars \
-    NODE_ENV=production,\
-    APP_ORIGIN=https://<hosting-domain>,\
-    ADMIN_EMAIL=admin@banghub.kr,\
-    FIRESTORE_PROJECT_ID=<PROJECT_ID>,\
-    USE_FIRESTORE_EMULATOR=false,\
-    GOOGLE_TTS_ENABLED=true,\
-    GOOGLE_TTS_VOICE=en-US-Neural2-F,\
-    GOOGLE_TTS_LANGUAGE=en-US \
-  --set-secrets \
-    SESSION_SECRET=SESSION_SECRET:latest,\
-    ADMIN_PASSWORD=ADMIN_PASSWORD:latest
+  --set-env-vars "NODE_ENV=production,APP_ORIGIN=https://english.banghub.kr,ADMIN_EMAIL=admin@banghub.kr,FIRESTORE_PROJECT_ID=banghub-english-prod,USE_FIRESTORE_EMULATOR=false,GOOGLE_TTS_ENABLED=true,GOOGLE_TTS_VOICE=en-US-Neural2-F,GOOGLE_TTS_LANGUAGE=en-US" \
+  --set-secrets "SESSION_SECRET=SESSION_SECRET:latest,ADMIN_PASSWORD=ADMIN_PASSWORD:latest"
 ```
 
-`--allow-unauthenticated` is intentional: the service is reached via
-Firebase Hosting rewrite (which proxies as an authenticated service agent)
-**and** by direct browser preflight during development. The Fastify layer
-is the auth boundary.
+`--allow-unauthenticated` is intentional: Fastify is the auth layer;
+Firebase Hosting talks to Cloud Run as a service agent on your behalf.
 
-### 2. Firestore rules + frontend → Firebase
+**Frontend + Firestore rules → Firebase**
 ```
+pnpm --filter @banghub/frontend build
 firebase use production
-firebase deploy --only firestore:rules,hosting
+firebase deploy --only hosting,firestore:rules
 ```
 
-Hosting deploy picks up `app/frontend/dist` which `deploy-check.sh`
-already built. If you skipped that, run
-`pnpm --filter @banghub/frontend build` first.
+### First-run admin seed
 
-### 3. Smoke test
-- [ ] `curl https://<hosting-domain>/api/home` returns JSON.
-- [ ] Visit the site, log in as admin, create a mission.
-- [ ] Play a mission; the listen button should fetch Cloud TTS (watch
-      Network tab for `/api/tts`, should return `audio/mpeg`).
+The backend only creates the admin user when the seed script runs.
+After the first Cloud Run deploy, seed Firestore once:
+
+```
+GOOGLE_APPLICATION_CREDENTIALS=~/banghub-deployer.json \
+USE_FIRESTORE_EMULATOR=false \
+FIRESTORE_PROJECT_ID=banghub-english-prod \
+ADMIN_EMAIL=admin@banghub.kr \
+ADMIN_PASSWORD="<paste-admin-password>" \
+pnpm --filter @banghub/backend seed
+```
+
+Run from a trusted workstation, not Cloud Run. After success, delete
+the local key file (`shred -u ~/banghub-deployer.json` or equivalent on
+your OS).
+
+### Smoke test
+
+- [ ] `curl https://english.banghub.kr/api/home` (or the `.web.app`
+      fallback if DNS is not live) returns JSON with `viewer: null` and
+      a `todayMission` object.
+- [ ] Log in as `admin@banghub.kr` in the UI.
+- [ ] Open a mission, press Listen — Network tab shows `/api/tts?text=…`
+      returning `audio/mpeg`.
+
+---
 
 ## Env vars reference
 
 | Var | Where | Purpose |
 | --- | --- | --- |
-| `NODE_ENV=production` | Cloud Run env | Toggles secure cookie |
+| `NODE_ENV=production` | Cloud Run env | Enables secure cookie flag |
 | `PORT=8080` | Cloud Run (default) | Fastify listen port |
-| `APP_ORIGIN` | Cloud Run env | CORS allowlist (rarely used same-origin) |
-| `SESSION_SECRET` | Cloud Run secret | Signs session cookie |
-| `ADMIN_EMAIL` | Cloud Run env | Seeded admin login |
-| `ADMIN_PASSWORD` | Cloud Run secret | Seeded admin password |
-| `FIRESTORE_PROJECT_ID` | Cloud Run env | Prod Firestore project |
-| `USE_FIRESTORE_EMULATOR=false` | Cloud Run env | Opt out of emulator |
-| `GOOGLE_TTS_ENABLED=true` | Cloud Run env | Turn on `/api/tts` provider |
-| `GOOGLE_TTS_VOICE` | Cloud Run env | Neural voice id |
-| `GOOGLE_TTS_LANGUAGE` | Cloud Run env | BCP-47 language |
-| `VITE_API_BASE_URL=` | Frontend build (`.env.production`) | Empty → same-origin |
+| `APP_ORIGIN=https://english.banghub.kr` | Cloud Run env | CORS allowlist (unused at runtime thanks to same-origin rewrite, but registered for defense in depth) |
+| `ADMIN_EMAIL=admin@banghub.kr` | Cloud Run env | Seeded admin login |
+| `ADMIN_PASSWORD` | Cloud Run secret (`ADMIN_PASSWORD:latest`) | Admin password hash input |
+| `SESSION_SECRET` | Cloud Run secret (`SESSION_SECRET:latest`) | Signs session cookie |
+| `FIRESTORE_PROJECT_ID=banghub-english-prod` | Cloud Run env | Prod Firestore project |
+| `USE_FIRESTORE_EMULATOR=false` | Cloud Run env | Opt out of emulator path |
+| `GOOGLE_TTS_ENABLED=true` | Cloud Run env | Turns on `/api/tts` provider |
+| `GOOGLE_TTS_VOICE=en-US-Neural2-F` | Cloud Run env | Neural voice id |
+| `GOOGLE_TTS_LANGUAGE=en-US` | Cloud Run env | BCP-47 language |
+| `VITE_API_BASE_URL=""` | Frontend build (`.env.production`) | Empty → same-origin via Hosting rewrite |
+
+---
 
 ## Rollback
 
-- Backend: `gcloud run services update-traffic banghub-backend
-  --to-revisions=<PREVIOUS_REVISION>=100 --region asia-northeast3`
-- Frontend: `firebase hosting:clone <site>:live <site>:rollback` then
-  flip traffic, or redeploy the previous git tag.
+- **Backend**: roll traffic to the previous Cloud Run revision:
+  ```
+  gcloud run revisions list --service banghub-backend \
+    --region asia-northeast3 --project banghub-english-prod
+  gcloud run services update-traffic banghub-backend \
+    --to-revisions=<PREVIOUS_REVISION>=100 \
+    --region asia-northeast3 --project banghub-english-prod
+  ```
+- **Frontend**: Firebase Console → Hosting → Release history → Rollback,
+  or re-deploy a previous git tag.
 
-## Not yet automated
+---
 
-- GitHub Actions CI/CD pipeline (everything above is manual today).
-- First-run Firestore seed for prod (run `pnpm --filter @banghub/backend seed`
-  once with `USE_FIRESTORE_EMULATOR=false` and
-  `GOOGLE_APPLICATION_CREDENTIALS` pointing at the service account key;
-  do this from a trusted workstation, not Cloud Run).
-- Alerting + uptime checks.
+## Hardening (do after first green deploy)
+
+- [ ] Replace the `GCP_SA_KEY` JSON secret with Workload Identity
+      Federation (GitHub → GCP OIDC) so no long-lived key sits in the
+      repo.
+- [ ] Set up Cloud Monitoring uptime checks on `/api/home`.
+- [ ] Set up Cloud Logging alerts for 5xx spikes and TTS quota errors.
+- [ ] Periodically rotate `SESSION_SECRET` (session invalidation expected).
+- [ ] Review admin password rotation cadence.
+
+---
+
+## Not in scope yet
+
+- Per-PR preview environments.
+- Automated first-run seed (currently a manual step).
+- Cost caps / budget alerts (set once real traffic starts).
