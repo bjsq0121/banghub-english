@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Rain drop</title>
+  <desc id="desc">A single blue rain drop falling from a gentle cloud.</desc>
+  <rect width="320" height="240" fill="#c5e8f5"/>
+  <g fill="#ffffff" stroke="#a7cddc" stroke-width="3">
+    <ellipse cx="150" cy="64" rx="60" ry="22"/>
+    <ellipse cx="200" cy="56" rx="40" ry="20"/>
+    <ellipse cx="118" cy="58" rx="30" ry="18"/>
+  </g>
+  <g stroke="#5fa4c4" stroke-width="4" stroke-linecap="round">
+    <line x1="104" y1="104" x2="96" y2="130"/>
+    <line x1="216" y1="104" x2="224" y2="130"/>
+    <line x1="76" y1="150" x2="66" y2="180"/>
+    <line x1="248" y1="150" x2="258" y2="180"/>
+  </g>
+  <path d="M160 108c-18 30-34 50-34 70a34 34 0 0 0 68 0c0-20-16-40-34-70z" fill="#4eaed0" stroke="#2a7ba1" stroke-width="4"/>
+  <ellipse cx="150" cy="160" rx="6" ry="10" fill="#ffffff" opacity="0.7"/>
+</svg>

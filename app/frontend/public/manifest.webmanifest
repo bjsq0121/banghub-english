@@ -1,0 +1,8 @@
+{
+  "name": "Banghub English",
+  "short_name": "Banghub English",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff9ef",
+  "theme_color": "#182028"
+}

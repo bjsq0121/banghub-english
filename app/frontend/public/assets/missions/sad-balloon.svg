@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Sad balloon</title>
+  <desc id="desc">A blue balloon with a gentle sad face on a calm sky.</desc>
+  <rect width="320" height="240" fill="#eef4ff"/>
+  <path d="M160 200v-10" stroke="#8a6a3a" stroke-width="3"/>
+  <path d="M160 200c-6 8-14 18-6 32 2 4-2 6-6 4-10-6-14-22-6-36" stroke="#8a6a3a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M160 58c-42 0-74 30-74 68s32 64 66 64l14 10 14-10c34 0 66-26 66-64s-32-68-86-68z" fill="#6a8bff" stroke="#3e59b0" stroke-width="4"/>
+  <ellipse cx="130" cy="108" rx="12" ry="16" fill="#b7c5ff" opacity="0.7"/>
+  <g fill="#1f223a">
+    <circle cx="138" cy="118" r="6"/>
+    <circle cx="186" cy="118" r="6"/>
+  </g>
+  <path d="M128 162q32-22 68 0" stroke="#1f223a" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <circle cx="142" cy="138" r="3" fill="#9fb0ff"/>
+</svg>

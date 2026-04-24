@@ -1,0 +1,5 @@
+packages:
+  - app/frontend
+  - app/backend
+  - app/shared
+  - tests/e2e

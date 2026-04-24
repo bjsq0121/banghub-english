@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Blue toy block</title>
+  <desc id="desc">A blue toy block sitting on grass in a bright toy forest.</desc>
+  <rect width="320" height="240" fill="#dff5ff"/>
+  <circle cx="258" cy="48" r="24" fill="#ffd84d"/>
+  <path d="M0 176c38-18 78-18 120 0 38 16 78 18 120 0 32-14 58-14 80 0v64H0z" fill="#75ca6c"/>
+  <rect x="44" y="82" width="32" height="94" rx="16" fill="#55a85b"/>
+  <circle cx="60" cy="76" r="25" fill="#83d57a"/>
+  <rect x="244" y="86" width="28" height="90" rx="14" fill="#55a85b"/>
+  <circle cx="258" cy="80" r="24" fill="#83d57a"/>
+  <path d="M92 82h114l32 34v82H124l-32-34z" fill="#2f85e8"/>
+  <path d="M92 82h114l32 34H124z" fill="#6fb7ff"/>
+  <path d="M124 116h114v82H124z" fill="#3f96f4"/>
+  <path d="M92 82l32 34v82l-32-34z" fill="#246fc7"/>
+  <circle cx="154" cy="144" r="14" fill="#dff5ff"/>
+  <circle cx="202" cy="144" r="14" fill="#dff5ff"/>
+  <circle cx="154" cy="182" r="14" fill="#dff5ff"/>
+  <circle cx="202" cy="182" r="14" fill="#dff5ff"/>
+</svg>

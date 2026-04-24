@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Yellow toy star</title>
+  <desc id="desc">A bright yellow star over a friendly toy forest.</desc>
+  <rect width="320" height="240" fill="#dff5ff"/>
+  <path d="M0 174c40-18 78-18 118 0 42 18 82 18 124 0 30-13 56-13 78 0v66H0z" fill="#73c96b"/>
+  <rect x="42" y="80" width="30" height="96" rx="15" fill="#55a75c"/>
+  <circle cx="57" cy="74" r="25" fill="#81d477"/>
+  <rect x="252" y="84" width="28" height="92" rx="14" fill="#55a75c"/>
+  <circle cx="266" cy="78" r="24" fill="#81d477"/>
+  <path d="M160 36l24 50 55 8-40 39 10 55-49-26-49 26 10-55-40-39 55-8z" fill="#ffd84d"/>
+  <path d="M160 58l16 34 38 5-27 26 7 38-34-18-34 18 7-38-27-26 38-5z" fill="#ffe980"/>
+  <circle cx="144" cy="104" r="5" fill="#26323c"/>
+  <circle cx="176" cy="104" r="5" fill="#26323c"/>
+  <path d="M146 126c9 8 19 8 28 0" fill="none" stroke="#26323c" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="104" cy="54" r="7" fill="#4aa3ff"/>
+  <circle cx="226" cy="64" r="6" fill="#f35a4d"/>
+  <circle cx="88" cy="140" r="6" fill="#f35a4d"/>
+</svg>

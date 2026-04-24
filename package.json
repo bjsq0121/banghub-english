@@ -1,0 +1,16 @@
+{
+  "name": "banghub-english",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "devDependencies": {
+    "firebase-tools": "^13.35.1"
+  },
+  "scripts": {
+    "test": "pnpm emulator:exec:test",
+    "test:packages": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "build": "pnpm -r build",
+    "emulator:start": "./scripts/firestore/start-emulator.sh",
+    "emulator:exec:test": "./scripts/firestore/run-emulator-tests.sh"
+  }
+}
