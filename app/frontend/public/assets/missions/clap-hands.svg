@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Clapping hands</title>
+  <desc id="desc">Two open hands clapping together with a burst of joy.</desc>
+  <rect width="320" height="240" fill="#fff3c8"/>
+  <g stroke="#e09a3a" stroke-width="5" stroke-linejoin="round" fill="#ffd88a">
+    <path d="M112 88c-14 6-22 22-20 42l6 48c2 18 16 28 34 26l30-4-4-90c-14-28-34-30-46-22z"/>
+    <path d="M208 88c14 6 22 22 20 42l-6 48c-2 18-16 28-34 26l-30-4 4-90c14-28 34-30 46-22z"/>
+  </g>
+  <g stroke="#e5b32c" stroke-width="6" stroke-linecap="round">
+    <line x1="160" y1="40" x2="160" y2="20"/>
+    <line x1="120" y1="52" x2="108" y2="34"/>
+    <line x1="200" y1="52" x2="212" y2="34"/>
+    <line x1="96" y1="78" x2="74" y2="68"/>
+    <line x1="224" y1="78" x2="246" y2="68"/>
+  </g>
+</svg>
