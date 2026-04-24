@@ -24,6 +24,9 @@ Browser ── https://english.banghub.kr (or banghub-english-prod.web.app fallb
   before creating.
 - **Backend**: Cloud Run service `banghub-backend`. The container comes
   from `app/backend/Dockerfile`.
+- **GitHub deploy auth**: GitHub Actions uses Workload Identity
+  Federation against the deploy SA. Long-lived JSON keys are blocked by
+  org policy and are not used.
 - **Secrets**: `SESSION_SECRET`, `ADMIN_PASSWORD` in Secret Manager. Never
   in the repo. Code keeps `.env.example` placeholders only.
 - **Firestore rules**: default-deny. The backend uses firebase-admin which
@@ -45,6 +48,7 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
     run.googleapis.com \
     cloudbuild.googleapis.com \
     artifactregistry.googleapis.com \
+    firebase.googleapis.com \
     texttospeech.googleapis.com \
     secretmanager.googleapis.com \
     --project banghub-english-prod
@@ -79,13 +83,15 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
   SA="banghub-backend@banghub-english-prod.iam.gserviceaccount.com"
   for role in \
       roles/datastore.user \
-      roles/cloudtts.user \
       roles/secretmanager.secretAccessor
   do
     gcloud projects add-iam-policy-binding banghub-english-prod \
       --member="serviceAccount:$SA" --role="$role"
   done
   ```
+  `roles/cloudtts.user` is not a real predefined role. Cloud TTS access
+  stays out of the bootstrap checklist unless a verified minimal role is
+  identified later.
 - [ ] Create the deploy SA (used by GitHub Actions to push builds):
   ```
   gcloud iam service-accounts create banghub-deployer \
@@ -102,21 +108,37 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
       roles/artifactregistry.writer \
       roles/firebasehosting.admin \
       roles/firebaserules.admin \
-      roles/datastore.user
+      roles/datastore.user \
+      roles/secretmanager.admin
   do
     gcloud projects add-iam-policy-binding banghub-english-prod \
       --member="serviceAccount:$DEPLOY_SA" --role="$role"
   done
   ```
-- [ ] Generate a JSON key for the deployer and save it (GitHub secret
-      target — do NOT commit):
+- [ ] Create a GitHub Workload Identity Pool and provider:
   ```
-  gcloud iam service-accounts keys create ~/banghub-deployer.json \
-    --iam-account=$DEPLOY_SA \
-    --project banghub-english-prod
+  gcloud iam workload-identity-pools create github \
+    --project=banghub-english-prod \
+    --location=global \
+    --display-name="GitHub Actions Pool"
+
+  gcloud iam workload-identity-pools providers create-oidc banghub-english \
+    --project=banghub-english-prod \
+    --location=global \
+    --workload-identity-pool=github \
+    --display-name="Banghub English GitHub Provider" \
+    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+    --attribute-condition='assertion.repository == "bjsq0121/banghub-english"' \
+    --issuer-uri="https://token.actions.githubusercontent.com"
   ```
-  Upgrade path: replace the JSON key with Workload Identity Federation
-  when ready (see "Hardening", below).
+- [ ] Allow the GitHub repo to impersonate the deploy SA:
+  ```
+  gcloud iam service-accounts add-iam-policy-binding \
+    banghub-deployer@banghub-english-prod.iam.gserviceaccount.com \
+    --project=banghub-english-prod \
+    --role=roles/iam.workloadIdentityUser \
+    --member="principalSet://iam.googleapis.com/projects/299811757155/locations/global/workloadIdentityPools/github/attribute.repository/bjsq0121/banghub-english"
+  ```
 
 ### Secrets
 - [ ] Generate a session secret (store the output; you'll need it once):
@@ -155,14 +177,12 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
       `https://banghub-english-prod.web.app` — the code treats it as a
       fallback; no config change needed.
 
-### GitHub Actions secrets (one-time)
+### GitHub Actions repo settings (one-time)
 
 For `.github/workflows/deploy.yml` to work:
 
-- [ ] Repo → Settings → Secrets and variables → Actions → New repository
-      secret.
-- [ ] `GCP_SA_KEY` — paste the JSON contents of the `banghub-deployer`
-      key generated above.
+- [ ] No `GCP_SA_KEY` secret is needed. The workflow authenticates with
+      GitHub OIDC + Workload Identity Federation.
 - [ ] (Optional) Protect the `main` branch with "Require status checks
       to pass" so the deploy workflow must succeed before a merge is
       possible via PR.
@@ -187,7 +207,7 @@ image if Docker is installed. All green means the branch is deployable.
 
 ### Option A — GitHub Actions (recommended)
 
-Once the `GCP_SA_KEY` secret is in place, every push to `main` triggers
+Once Workload Identity Federation is configured, every push to `main` triggers
 `.github/workflows/deploy.yml`: test → build → deploy backend and
 frontend in parallel. Manual re-run: Actions tab → Deploy → Run workflow.
 
@@ -223,10 +243,17 @@ firebase deploy --only hosting,firestore:rules
 ### First-run admin seed
 
 The backend only creates the admin user when the seed script runs.
-After the first Cloud Run deploy, seed Firestore once:
+After the first Cloud Run deploy, seed Firestore once from a trusted
+workstation that has user ADC configured:
 
 ```
-GOOGLE_APPLICATION_CREDENTIALS=~/banghub-deployer.json \
+gcloud auth application-default login
+gcloud auth application-default set-quota-project banghub-english-prod
+```
+
+Then run:
+
+```
 USE_FIRESTORE_EMULATOR=false \
 FIRESTORE_PROJECT_ID=banghub-english-prod \
 ADMIN_EMAIL=admin@banghub.kr \
@@ -234,9 +261,8 @@ ADMIN_PASSWORD="<paste-admin-password>" \
 pnpm --filter @banghub/backend seed
 ```
 
-Run from a trusted workstation, not Cloud Run. After success, delete
-the local key file (`shred -u ~/banghub-deployer.json` or equivalent on
-your OS).
+Run from a trusted workstation, not Cloud Run. No JSON key file is
+required or expected.
 
 ### Smoke test
 
@@ -285,9 +311,6 @@ your OS).
 
 ## Hardening (do after first green deploy)
 
-- [ ] Replace the `GCP_SA_KEY` JSON secret with Workload Identity
-      Federation (GitHub → GCP OIDC) so no long-lived key sits in the
-      repo.
 - [ ] Set up Cloud Monitoring uptime checks on `/api/home`.
 - [ ] Set up Cloud Logging alerts for 5xx spikes and TTS quota errors.
 - [ ] Periodically rotate `SESSION_SECRET` (session invalidation expected).

@@ -14,6 +14,8 @@ env:
   GCP_REGION: asia-northeast3
   CLOUD_RUN_SERVICE: banghub-backend
   CLOUD_RUN_RUNTIME_SA: banghub-backend@banghub-english-prod.iam.gserviceaccount.com
+  GCP_DEPLOYER_SA: banghub-deployer@banghub-english-prod.iam.gserviceaccount.com
+  GCP_WORKLOAD_IDENTITY_PROVIDER: projects/299811757155/locations/global/workloadIdentityPools/github/providers/banghub-english
   APP_ORIGIN: https://english.banghub.kr
   ADMIN_EMAIL: admin@banghub.kr
 
@@ -60,7 +62,9 @@ jobs:
       - id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_DEPLOYER_SA }}
+          create_credentials_file: true
 
       - uses: google-github-actions/setup-gcloud@v2
         with:
@@ -101,7 +105,9 @@ jobs:
       - id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_DEPLOYER_SA }}
+          create_credentials_file: true
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
