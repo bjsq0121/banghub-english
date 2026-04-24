@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Bunny the encourager</title>
+  <desc id="desc">A soft cream-white rabbit with long floppy ears holding a gold star, smiling warmly.</desc>
+  <g stroke="#27313b" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M108 88 q-16 -62 12 -68 q24 -4 20 68z" fill="#faf5ec"/>
+    <path d="M212 88 q16 -64 -14 -66 q-22 0 -18 66z" fill="#faf5ec"/>
+  </g>
+  <path d="M114 84 q-8 -50 16 -54 q16 -2 14 54z" fill="#f298b8"/>
+  <path d="M206 84 q8 -50 -16 -50 q-16 2 -12 50z" fill="#f298b8"/>
+  <ellipse cx="160" cy="140" rx="82" ry="74" fill="#faf5ec" stroke="#27313b" stroke-width="4"/>
+  <path d="M126 128 q12 -10 24 0" stroke="#27313b" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M170 128 q12 -10 24 0" stroke="#27313b" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="160" cy="152" rx="7" ry="5" fill="#f298b8" stroke="#27313b" stroke-width="2"/>
+  <path d="M160 158 v8" stroke="#27313b" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M150 170 q10 10 20 0" stroke="#27313b" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="108" cy="158" r="9" fill="#f298b8" opacity="0.4"/>
+  <circle cx="212" cy="158" r="9" fill="#f298b8" opacity="0.4"/>
+  <ellipse cx="160" cy="240" rx="66" ry="64" fill="#faf5ec" stroke="#27313b" stroke-width="4"/>
+  <ellipse cx="160" cy="256" rx="40" ry="42" fill="#fffaf2"/>
+  <ellipse cx="224" cy="248" rx="16" ry="20" fill="#faf5ec" stroke="#27313b" stroke-width="3"/>
+  <ellipse cx="100" cy="216" rx="16" ry="18" fill="#faf5ec" stroke="#27313b" stroke-width="3"/>
+  <path d="M90 190 l8 -20 l6 20 l20 2 l-16 14 l6 18 l-18 -10 l-18 10 l6 -18 l-16 -14z" fill="#ffd84d" stroke="#27313b" stroke-width="3" stroke-linejoin="round" transform="rotate(-8 92 198)"/>
+  <ellipse cx="130" cy="304" rx="22" ry="12" fill="#faf5ec" stroke="#27313b" stroke-width="3"/>
+  <ellipse cx="190" cy="304" rx="22" ry="12" fill="#faf5ec" stroke="#27313b" stroke-width="3"/>
+</svg>

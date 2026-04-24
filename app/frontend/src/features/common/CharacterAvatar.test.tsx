@@ -11,19 +11,19 @@ describe("CharacterAvatar", () => {
     const { rerender } = render(<CharacterAvatar character="robo" />);
     expect(screen.getByRole("img", { name: /robo/i })).toHaveAttribute(
       "src",
-      "/assets/characters/robo.png"
+      "/assets/characters/robo.svg"
     );
 
     rerender(<CharacterAvatar character="dino" />);
     expect(screen.getByRole("img", { name: /dino/i })).toHaveAttribute(
       "src",
-      "/assets/characters/dino.png"
+      "/assets/characters/dino.svg"
     );
 
     rerender(<CharacterAvatar character="bunny" />);
     expect(screen.getByRole("img", { name: /bunny/i })).toHaveAttribute(
       "src",
-      "/assets/characters/bunny.png"
+      "/assets/characters/bunny.svg"
     );
   });
 
