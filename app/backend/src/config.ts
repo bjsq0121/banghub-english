@@ -20,6 +20,9 @@ export function getConfig() {
     adminPassword,
     firestoreProjectId: process.env.FIRESTORE_PROJECT_ID ?? "banghub-english-local",
     firestoreEmulatorHost: process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:9080",
-    useFirestoreEmulator: process.env.USE_FIRESTORE_EMULATOR !== "false"
+    useFirestoreEmulator: process.env.USE_FIRESTORE_EMULATOR !== "false",
+    googleTtsEnabled: process.env.GOOGLE_TTS_ENABLED === "true",
+    googleTtsVoice: process.env.GOOGLE_TTS_VOICE ?? "en-US-Neural2-F",
+    googleTtsLanguage: process.env.GOOGLE_TTS_LANGUAGE ?? "en-US"
   };
 }

@@ -4,6 +4,7 @@ import { registerAdminRoutes } from "./modules/admin/admin.routes";
 import { registerAuthRoutes } from "./modules/auth/auth.routes";
 import { registerContentRoutes } from "./modules/content/content.routes";
 import { registerProgressRoutes } from "./modules/progress/progress.routes";
+import { registerTtsRoutes } from "./modules/tts/tts.routes";
 import { registerCors } from "./plugins/cors";
 import { registerSession } from "./plugins/session";
 
@@ -19,6 +20,7 @@ export function buildApp() {
   void registerAuthRoutes(app);
   void registerContentRoutes(app);
   void registerProgressRoutes(app);
+  void registerTtsRoutes(app);
 
   return app;
 }
