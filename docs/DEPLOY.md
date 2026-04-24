@@ -109,6 +109,7 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
       roles/iam.serviceAccountUser \
       roles/cloudbuild.builds.editor \
       roles/artifactregistry.writer \
+      roles/logging.logWriter \
       roles/storage.admin \
       roles/firebasehosting.admin \
       roles/firebaserules.admin \
@@ -142,6 +143,15 @@ time; afterwards, only DNS changes or secret rotations need revisiting.
     --project=banghub-english-prod \
     --role=roles/iam.workloadIdentityUser \
     --member="principalSet://iam.googleapis.com/projects/299811757155/locations/global/workloadIdentityPools/github/attribute.repository/bjsq0121/banghub-english"
+  ```
+- [ ] Allow the Cloud Build service agent to impersonate the deploy SA
+      when `gcloud builds submit --service-account ...` is used:
+  ```
+  gcloud iam service-accounts add-iam-policy-binding \
+    banghub-deployer@banghub-english-prod.iam.gserviceaccount.com \
+    --project=banghub-english-prod \
+    --role=roles/iam.serviceAccountTokenCreator \
+    --member="serviceAccount:service-299811757155@gcp-sa-cloudbuild.iam.gserviceaccount.com"
   ```
 
 ### Secrets
@@ -227,6 +237,7 @@ Only use when CI is blocked. Requires `gcloud auth login` and
 SHORT_SHA="$(git rev-parse --short HEAD)"
 gcloud builds submit \
   --config cloudbuild.yaml \
+  --service-account "projects/banghub-english-prod/serviceAccounts/banghub-deployer@banghub-english-prod.iam.gserviceaccount.com" \
   --substitutions "_IMAGE_TAG=${SHORT_SHA}" \
   --project banghub-english-prod \
   .

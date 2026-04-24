@@ -75,6 +75,7 @@ jobs:
         run: |
           gcloud builds submit \
             --config cloudbuild.yaml \
+            --service-account "projects/$GCP_PROJECT_ID/serviceAccounts/$GCP_DEPLOYER_SA" \
             --substitutions "_IMAGE_TAG=$IMAGE_TAG" \
             --project "$GCP_PROJECT_ID" \
             .

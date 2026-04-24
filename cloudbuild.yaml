@@ -7,3 +7,5 @@ steps:
       - .
 images:
   - asia-northeast3-docker.pkg.dev/$PROJECT_ID/banghub/backend:${_IMAGE_TAG}
+options:
+  logging: CLOUD_LOGGING_ONLY
