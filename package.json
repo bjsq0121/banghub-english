@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "pnpm emulator:exec:test",
-    "test:packages": "pnpm -r test",
+    "test:packages": "pnpm --filter @banghub/shared build && pnpm -r test",
     "lint": "pnpm -r lint",
     "build": "pnpm -r build",
     "emulator:start": "./scripts/firestore/start-emulator.sh",
