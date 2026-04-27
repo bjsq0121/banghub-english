@@ -8,5 +8,27 @@
   },
   "firestore": {
     "rules": "infra/firestore.rules"
+  },
+  "hosting": {
+    "site": "banghub-english-prod",
+    "public": "app/frontend/dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "banghub-backend",
+          "region": "asia-northeast3"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }

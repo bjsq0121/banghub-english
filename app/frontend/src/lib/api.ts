@@ -7,7 +7,15 @@ import type {
   UpdatePreferencesRequest
 } from "@banghub/shared";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
+export function resolveApiBase(explicitBase: string | undefined, isDev: boolean) {
+  if (typeof explicitBase === "string") {
+    return explicitBase;
+  }
+
+  return isDev ? "http://localhost:4000" : "";
+}
+
+export const API_BASE = resolveApiBase(import.meta.env.VITE_API_BASE_URL, import.meta.env.DEV);
 
 async function readJson<T>(
   response: Response,
