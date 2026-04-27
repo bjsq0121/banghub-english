@@ -31,10 +31,21 @@ a {
   min-height: 100vh;
 }
 
-.nav {
-  display: flex;
-  gap: 16px;
-  padding: 20px 24px;
+.shell-header {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 20px clamp(16px, 4vw, 40px) 0;
+}
+
+.shell-brand {
+  display: grid;
+  gap: 4px;
+}
+
+.shell-brand a {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #163447;
 }
 
 .page {
