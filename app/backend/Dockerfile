@@ -21,7 +21,7 @@ RUN pnpm --filter @banghub/backend build
 
 FROM build AS deploy
 WORKDIR /repo
-RUN pnpm --filter @banghub/backend deploy --prod --legacy /deploy
+RUN pnpm --filter @banghub/backend --prod deploy /deploy
 
 FROM node:22-alpine AS runner
 WORKDIR /app
