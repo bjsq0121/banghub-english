@@ -7,29 +7,54 @@ type HomePageProps = {
 };
 
 export function HomePage({ data }: HomePageProps) {
-  return (
-    <main className="page">
-      <header className="hero">
-        <p>Daily toy forest routine</p>
-        <h1>오늘의 미션</h1>
-      </header>
+  const mission = data.todayMission;
 
-      <section className="grid">
-        {data.todayMission ? (
-          <article className="track-card">
-            <p>{data.todayMission.theme}</p>
-            <h2>{data.todayMission.title}</h2>
-            <p>{data.todayMission.dadGuideKo}</p>
-            <div>
-              <Link to={`/mission/${data.todayMission.id}/age3`}>3세랑 하기</Link>
-              <Link to={`/mission/${data.todayMission.id}/age6`}>6세랑 하기</Link>
-              <Link to={`/mission/${data.todayMission.id}/together`}>같이 하기</Link>
+  return (
+    <main className="page home-page">
+      {mission ? (
+        <>
+          <section className="home-hero">
+            <div className="home-hero-copy">
+              <p className="hero-kicker">TODAY&apos;S TOY FOREST MISSION</p>
+              <h1>{mission.title}</h1>
+              <p className="home-hero-summary">Robo helps dad and kids play together.</p>
+              <div className="home-hero-actions">
+                <Link className="primary-action" to={`/mission/${mission.id}/together`}>
+                  같이 하기
+                </Link>
+              </div>
+              <div className="home-secondary-actions">
+                <Link className="secondary-action" to={`/mission/${mission.id}/age3`}>
+                  3세랑 하기
+                </Link>
+                <Link className="secondary-action" to={`/mission/${mission.id}/age6`}>
+                  6세랑 하기
+                </Link>
+              </div>
             </div>
-          </article>
-        ) : (
+
+            <div className="home-hero-art">
+              <img src={mission.image.url} alt={mission.image.alt} width="360" />
+              <div className="character-chip">{mission.character}</div>
+            </div>
+          </section>
+
+          <section className="home-support-grid">
+            <article className="support-card">
+              <p className="support-label">오늘 배울 말</p>
+              <strong>{mission.phrase}</strong>
+            </article>
+            <article className="support-card">
+              <p className="support-label">아빠 준비</p>
+              <span>{mission.dadGuideKo}</span>
+            </article>
+          </section>
+        </>
+      ) : (
+        <section className="grid">
           <EmptyState title="오늘의 미션" body="오늘 준비된 미션이 아직 없어요." />
-        )}
-      </section>
+        </section>
+      )}
     </main>
   );
 }

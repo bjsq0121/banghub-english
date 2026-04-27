@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { HomePage } from "./HomePage";
 
 describe("HomePage", () => {
-  it("shows today's mission links for each child mode", () => {
+  it("shows the family mission hero with a primary together CTA", () => {
     render(
       <MemoryRouter>
         <HomePage
@@ -46,6 +46,9 @@ describe("HomePage", () => {
       </MemoryRouter>
     );
 
+    expect(screen.getByRole("heading", { name: "Find the Train" })).toBeInTheDocument();
+    expect(screen.getByText("Robo helps dad and kids play together.")).toBeInTheDocument();
+    expect(screen.getByText("little train")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "3세랑 하기" })).toHaveAttribute(
       "href",
       "/mission/mission-1/age3"
