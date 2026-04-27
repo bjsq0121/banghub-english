@@ -2,7 +2,16 @@
   "name": "Banghub English",
   "short_name": "Banghub English",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#fff9ef",
-  "theme_color": "#182028"
+  "theme_color": "#182028",
+  "icons": [
+    {
+      "src": "/assets/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
