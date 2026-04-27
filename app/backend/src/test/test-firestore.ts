@@ -1,5 +1,5 @@
 import { afterEach, beforeEach } from "vitest";
-import { getConfig } from "../config";
+import { getConfig } from "../config.js";
 
 const CLEAR_TIMEOUT_MS = 8000;
 

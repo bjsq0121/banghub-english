@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { childModeSchema } from "./content";
+import { childModeSchema } from "./content.js";
 
 export const userProfileSchema = z.object({
   id: z.string(),

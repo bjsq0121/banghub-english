@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { buildApp } from "../app";
+import { buildApp } from "../app.js";
 import {
   __clearTtsCacheForTests,
   __setTtsProviderForTests
-} from "../modules/tts/tts.service";
+} from "../modules/tts/tts.service.js";
 
 describe("TTS API", () => {
   afterEach(() => {

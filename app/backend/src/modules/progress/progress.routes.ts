@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { markCompletionSchema } from "@banghub/shared";
-import { requireSession } from "../../plugins/session";
-import { markCompletion } from "./progress.service";
+import { requireSession } from "../../plugins/session.js";
+import { markCompletion } from "./progress.service.js";
 
 export async function registerProgressRoutes(app: FastifyInstance) {
   app.post("/api/progress/completions", async (request, reply) => {

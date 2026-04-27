@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { TtsNotConfiguredError, synthesize } from "./tts.service";
+import { TtsNotConfiguredError, synthesize } from "./tts.service.js";
 
 const querySchema = z.object({
   text: z.string().min(1).max(300),

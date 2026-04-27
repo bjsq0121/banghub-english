@@ -17,7 +17,7 @@ FROM deps AS build
 WORKDIR /repo
 COPY app/shared ./app/shared
 COPY app/backend ./app/backend
-RUN pnpm --filter @banghub/backend build
+RUN pnpm --filter @banghub/shared build && pnpm --filter @banghub/backend build
 
 FROM build AS deploy
 WORKDIR /repo

@@ -1,6 +1,6 @@
 import "./test-firestore";
 import { describe, expect, it } from "vitest";
-import { buildApp } from "../app";
+import { buildApp } from "../app.js";
 
 describe("buildApp", () => {
   it("returns health payload", async () => {

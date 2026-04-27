@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { loginRequestSchema, updatePreferencesSchema } from "@banghub/shared";
-import { clearSession, requireSession, setSession } from "../../plugins/session";
-import { loginUser, updatePreferences } from "./auth.service";
+import { clearSession, requireSession, setSession } from "../../plugins/session.js";
+import { loginUser, updatePreferences } from "./auth.service.js";
 
 const MAX_FAILED_LOGIN_ATTEMPTS = 5;
 const LOGIN_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;

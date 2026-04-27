@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { getConfig } from "../../config";
+import { getConfig } from "../../config.js";
 
 export class TtsNotConfiguredError extends Error {
   constructor() {

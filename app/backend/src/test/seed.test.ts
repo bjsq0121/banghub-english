@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dailyMissionSchema } from "@banghub/shared";
-import { seedDailyMissions } from "../db/seed-data";
+import { seedDailyMissions } from "../db/seed-data.js";
 
 describe("seed daily missions", () => {
   it("has at least two weeks of missions", () => {

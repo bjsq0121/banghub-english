@@ -1,7 +1,7 @@
 import type { ChildMode } from "@banghub/shared";
-import { COLLECTIONS } from "../../db/collections";
-import { getKoreaDateKey } from "../../db/date-key";
-import { getFirestoreClient } from "../../db/firestore";
+import { COLLECTIONS } from "../../db/collections.js";
+import { getKoreaDateKey } from "../../db/date-key.js";
+import { getFirestoreClient } from "../../db/firestore.js";
 
 export async function markCompletion(userId: string, missionId: string, childMode: ChildMode) {
   const db = getFirestoreClient();

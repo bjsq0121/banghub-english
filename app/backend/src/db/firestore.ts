@@ -1,6 +1,6 @@
 import { App, getApp, getApps, initializeApp } from "firebase-admin/app";
 import { Firestore, getFirestore } from "firebase-admin/firestore";
-import { getConfig } from "../config";
+import { getConfig } from "../config.js";
 
 let firestoreClient: Firestore | null = null;
 

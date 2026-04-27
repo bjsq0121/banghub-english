@@ -1,10 +1,10 @@
 import "./test-firestore";
 import { beforeEach, describe, expect, it } from "vitest";
-import { buildApp } from "../app";
-import { getConfig } from "../config";
-import { COLLECTIONS } from "../db/collections";
-import { getFirestoreClient } from "../db/firestore";
-import { hashPassword } from "../modules/auth/auth.service";
+import { buildApp } from "../app.js";
+import { getConfig } from "../config.js";
+import { COLLECTIONS } from "../db/collections.js";
+import { getFirestoreClient } from "../db/firestore.js";
+import { hashPassword } from "../modules/auth/auth.service.js";
 
 describe("auth and session security", () => {
   beforeEach(async () => {
