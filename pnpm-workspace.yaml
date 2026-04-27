@@ -3,4 +3,3 @@ packages:
   - app/backend
   - app/shared
   - tests/e2e
-injectWorkspacePackages: true
