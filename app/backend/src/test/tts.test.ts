@@ -1,9 +1,9 @@
 import "./test-firestore";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildApp } from "../app";
-import { COLLECTIONS } from "../db/collections";
-import { getFirestoreClient } from "../db/firestore";
-import { resetTtsTestDeps, setTtsTestDeps } from "../modules/tts/tts.service";
+import { buildApp } from "../app.js";
+import { COLLECTIONS } from "../db/collections.js";
+import { getFirestoreClient } from "../db/firestore.js";
+import { resetTtsTestDeps, setTtsTestDeps } from "../modules/tts/tts.service.js";
 
 function missionDoc(overrides: Record<string, unknown> = {}) {
   return {

@@ -1,10 +1,10 @@
 import "./test-firestore";
 import { beforeEach, describe, expect, it } from "vitest";
-import { buildApp } from "../app";
-import { COLLECTIONS } from "../db/collections";
-import { getKoreaDateKey } from "../db/date-key";
-import { getFirestoreClient } from "../db/firestore";
-import { hashPassword } from "../modules/auth/auth.service";
+import { buildApp } from "../app.js";
+import { COLLECTIONS } from "../db/collections.js";
+import { getKoreaDateKey } from "../db/date-key.js";
+import { getFirestoreClient } from "../db/firestore.js";
+import { hashPassword } from "../modules/auth/auth.service.js";
 
 describe("completion API", () => {
   beforeEach(async () => {

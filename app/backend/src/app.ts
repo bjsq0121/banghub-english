@@ -1,12 +1,12 @@
 import Fastify from "fastify";
-import { getConfig } from "./config";
-import { registerAdminRoutes } from "./modules/admin/admin.routes";
-import { registerAuthRoutes } from "./modules/auth/auth.routes";
-import { registerContentRoutes } from "./modules/content/content.routes";
-import { registerProgressRoutes } from "./modules/progress/progress.routes";
-import { registerTtsRoutes } from "./modules/tts/tts.routes";
-import { registerCors } from "./plugins/cors";
-import { registerSession } from "./plugins/session";
+import { getConfig } from "./config.js";
+import { registerAdminRoutes } from "./modules/admin/admin.routes.js";
+import { registerAuthRoutes } from "./modules/auth/auth.routes.js";
+import { registerContentRoutes } from "./modules/content/content.routes.js";
+import { registerProgressRoutes } from "./modules/progress/progress.routes.js";
+import { registerTtsRoutes } from "./modules/tts/tts.routes.js";
+import { registerCors } from "./plugins/cors.js";
+import { registerSession } from "./plugins/session.js";
 
 export function buildApp() {
   const config = getConfig();

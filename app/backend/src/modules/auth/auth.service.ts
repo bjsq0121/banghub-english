@@ -1,6 +1,6 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import { COLLECTIONS } from "../../db/collections";
-import { getFirestoreClient } from "../../db/firestore";
+import { COLLECTIONS } from "../../db/collections.js";
+import { getFirestoreClient } from "../../db/firestore.js";
 
 export function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");

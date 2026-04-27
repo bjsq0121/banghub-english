@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { childModeSchema, dailyMissionSchema, difficultySchema } from "./content";
-import { completionSchema, userProfileSchema } from "./user";
+import { childModeSchema, dailyMissionSchema, difficultySchema } from "./content.js";
+import { completionSchema, userProfileSchema } from "./user.js";
 
 export const homeResponseSchema = z.object({
   viewer: userProfileSchema.nullable(),

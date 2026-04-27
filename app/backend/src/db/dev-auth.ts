@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { COLLECTIONS } from "./collections";
-import { getFirestoreClient } from "./firestore";
+import { COLLECTIONS } from "./collections.js";
+import { getFirestoreClient } from "./firestore.js";
 
 export async function ensureDevelopmentUser(email: string, isAdmin = false) {
   const db = getFirestoreClient();

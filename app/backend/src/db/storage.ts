@@ -1,6 +1,6 @@
 import { getStorage } from "firebase-admin/storage";
-import { getConfig } from "../config";
-import { getFirebaseApp } from "./firestore";
+import { getConfig } from "../config.js";
+import { getFirebaseApp } from "./firestore.js";
 
 export function getStorageBucket() {
   const config = getConfig();

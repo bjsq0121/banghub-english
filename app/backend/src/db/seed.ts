@@ -1,9 +1,9 @@
-import { getConfig } from "../config";
-import { hashPassword } from "../modules/auth/auth.service";
-import { COLLECTIONS } from "./collections";
-import { getKoreaDateKey } from "./date-key";
-import { getFirestoreClient } from "./firestore";
-import { seedDailyMissions } from "./seed-data";
+import { getConfig } from "../config.js";
+import { hashPassword } from "../modules/auth/auth.service.js";
+import { COLLECTIONS } from "./collections.js";
+import { getKoreaDateKey } from "./date-key.js";
+import { getFirestoreClient } from "./firestore.js";
+import { seedDailyMissions } from "./seed-data.js";
 
 export async function seedFirestore() {
   const config = getConfig();

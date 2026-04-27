@@ -1,9 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { ZodError } from "zod";
-import { COLLECTIONS } from "../../db/collections";
-import { getFirestoreClient } from "../../db/firestore";
-import { requireSession } from "../../plugins/session";
-import { saveDailyMission } from "./admin.service";
+import { COLLECTIONS } from "../../db/collections.js";
+import { getFirestoreClient } from "../../db/firestore.js";
+import { requireSession } from "../../plugins/session.js";
+import { saveDailyMission } from "./admin.service.js";
 
 export async function registerAdminRoutes(app: FastifyInstance) {
   app.post("/api/admin/missions", async (request, reply) => {

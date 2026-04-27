@@ -1,5 +1,5 @@
 import { afterEach, beforeEach } from "vitest";
-import { getFirestoreClient } from "../db/firestore";
+import { getFirestoreClient } from "../db/firestore.js";
 
 async function withTimeout<T>(promise: Promise<T>, ms: number) {
   return await Promise.race<T>([

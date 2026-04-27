@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { getMissionTts } from "./tts.service";
+import { getMissionTts } from "./tts.service.js";
 
 export async function registerTtsRoutes(app: FastifyInstance) {
   app.get("/api/tts", async (request, reply) => {

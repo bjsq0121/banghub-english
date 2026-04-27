@@ -1,8 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { homeResponseSchema, missionDetailResponseSchema } from "@banghub/shared";
-import { getMissionById, getTodayMission } from "./content.service";
-import { getViewerById } from "../auth/auth.service";
-import { listCompletions } from "../progress/progress.service";
+import { getMissionById, getTodayMission } from "./content.service.js";
+import { getViewerById } from "../auth/auth.service.js";
+import { listCompletions } from "../progress/progress.service.js";
 
 export async function registerContentRoutes(app: FastifyInstance) {
   app.get("/api/home", async (request) => {

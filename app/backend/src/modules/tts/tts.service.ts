@@ -1,10 +1,10 @@
 import textToSpeech from "@google-cloud/text-to-speech";
 import { childModeSchema } from "@banghub/shared";
-import { COLLECTIONS } from "../../db/collections";
-import { getFirestoreClient } from "../../db/firestore";
-import { getStorageBucket } from "../../db/storage";
-import { getConfig } from "../../config";
-import { getMissionById } from "../content/content.service";
+import { COLLECTIONS } from "../../db/collections.js";
+import { getFirestoreClient } from "../../db/firestore.js";
+import { getStorageBucket } from "../../db/storage.js";
+import { getConfig } from "../../config.js";
+import { getMissionById } from "../content/content.service.js";
 
 export type TtsScope = "targetWord" | "phrase" | "sentence";
 type ValidChildMode = "age3" | "age6" | "together";
