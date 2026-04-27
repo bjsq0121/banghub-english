@@ -19,19 +19,6 @@ function getChildMission(mission: DailyMission, childMode: ChildMode): ChildMiss
 
   return mission.threeYearOld;
 }
-
-function getAudioUrl(mission: DailyMission, childMode: ChildMode) {
-  if (childMode === "age3") {
-    return mission.audio.wordUrl;
-  }
-
-  if (childMode === "age6") {
-    return mission.audio.sentenceUrl ?? mission.audio.phraseUrl ?? mission.audio.wordUrl;
-  }
-
-  return mission.audio.phraseUrl ?? mission.audio.wordUrl ?? mission.audio.sentenceUrl;
-}
-
 function getCharacterName(character: DailyMission["character"]) {
   if (character === "robo") {
     return "Robo";
@@ -163,7 +150,16 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
               <button
                 type="button"
                 className="primary-stage-button"
-                onClick={() => playMissionAudio(getAudioUrl(mission, childMode), fallbackText, { rate: speechRate })}
+                onClick={() =>
+                  void playMissionAudio(
+                    {
+                      missionId: mission.id,
+                      childMode,
+                      fallbackText
+                    },
+                    { rate: speechRate }
+                  )
+                }
               >
                 듣기
               </button>
@@ -221,7 +217,16 @@ export function MissionPage({ mission, childMode, viewer, onComplete }: MissionP
           <button
             type="button"
             className="secondary-action"
-            onClick={() => playMissionAudio(getAudioUrl(mission, childMode), fallbackText, { rate: speechRate })}
+            onClick={() =>
+              void playMissionAudio(
+                {
+                  missionId: mission.id,
+                  childMode,
+                  fallbackText
+                },
+                { rate: speechRate }
+              )
+            }
           >
             다시 듣기
           </button>

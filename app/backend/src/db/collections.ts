@@ -1,4 +1,5 @@
 export const COLLECTIONS = {
   users: "users",
-  dailyMissions: "dailyMissions"
+  dailyMissions: "dailyMissions",
+  ttsCache: "ttsCache"
 } as const;

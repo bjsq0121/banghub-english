@@ -1,5 +1,13 @@
+import type { ChildMode } from "@banghub/shared";
+
 type SpeechOptions = {
   rate?: number;
+};
+
+type MissionAudioRequest = {
+  missionId: string;
+  childMode: ChildMode;
+  fallbackText: string;
 };
 
 function selectEnglishVoice() {
@@ -40,25 +48,24 @@ export function speak(text: string, options: SpeechOptions = {}) {
   return true;
 }
 
-export function playMissionAudio(
-  audioUrl: string | null | undefined,
-  fallbackText: string,
-  options: SpeechOptions = {}
-) {
-  if (audioUrl) {
-    const audio = new Audio(audioUrl);
-    let didFallback = false;
-    const fallback = () => {
-      if (!didFallback) {
-        didFallback = true;
-        speak(fallbackText, options);
-      }
-    };
+async function fetchMissionAudioBlob(missionId: string, childMode: ChildMode) {
+  const response = await fetch(`/api/tts?missionId=${encodeURIComponent(missionId)}&childMode=${childMode}`);
 
-    audio.addEventListener("error", fallback, { once: true });
-    void audio.play().catch(fallback);
-    return true;
+  if (!response.ok) {
+    throw new Error("Server TTS failed");
   }
 
-  return speak(fallbackText, options);
+  return response.blob();
+}
+
+export async function playMissionAudio(request: MissionAudioRequest, options: SpeechOptions = {}) {
+  try {
+    const audioBlob = await fetchMissionAudioBlob(request.missionId, request.childMode);
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    await audio.play();
+    return true;
+  } catch {
+    return speak(request.fallbackText, options);
+  }
 }
