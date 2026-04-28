@@ -1,8 +1,15 @@
+import type { ChildMode } from "@banghub/shared";
+import { API_BASE } from "./api";
+
 type SpeechOptions = {
   rate?: number;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
+type MissionAudioRequest = {
+  missionId: string;
+  childMode: ChildMode;
+  fallbackText: string;
+};
 
 function selectEnglishVoice() {
   const voices = window.speechSynthesis.getVoices();
@@ -55,6 +62,21 @@ async function fetchServerTtsAudio(text: string): Promise<HTMLAudioElement | nul
   }
 }
 
+async function fetchMissionAudio(request: MissionAudioRequest): Promise<HTMLAudioElement | null> {
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/tts?missionId=${encodeURIComponent(request.missionId)}&childMode=${request.childMode}`
+    );
+    if (!response.ok) {
+      return null;
+    }
+    const blob = await response.blob();
+    return new Audio(URL.createObjectURL(blob));
+  } catch {
+    return null;
+  }
+}
+
 function playAudioWithFallback(
   audio: HTMLAudioElement,
   fallbackText: string,
@@ -73,10 +95,37 @@ function playAudioWithFallback(
 }
 
 export function playMissionAudio(
+  request: MissionAudioRequest,
+  options?: SpeechOptions
+): Promise<boolean>;
+export function playMissionAudio(
   audioUrl: string | null | undefined,
   fallbackText: string,
-  options: SpeechOptions = {}
-) {
+  options?: SpeechOptions
+): boolean;
+export function playMissionAudio(
+  requestOrAudioUrl: MissionAudioRequest | string | null | undefined,
+  fallbackTextOrOptions: string | SpeechOptions = {},
+  maybeOptions: SpeechOptions = {}
+): boolean | Promise<boolean> {
+  if (typeof requestOrAudioUrl === "object" && requestOrAudioUrl !== null) {
+    const request = requestOrAudioUrl;
+    const options = (fallbackTextOrOptions as SpeechOptions) ?? {};
+
+    return fetchMissionAudio(request).then((serverAudio) => {
+      if (serverAudio) {
+        playAudioWithFallback(serverAudio, request.fallbackText, options);
+        return true;
+      }
+
+      return speak(request.fallbackText, options);
+    });
+  }
+
+  const audioUrl = requestOrAudioUrl;
+  const fallbackText = typeof fallbackTextOrOptions === "string" ? fallbackTextOrOptions : "";
+  const options = maybeOptions;
+
   if (audioUrl) {
     playAudioWithFallback(new Audio(audioUrl), fallbackText, options);
     return true;

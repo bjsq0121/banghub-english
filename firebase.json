@@ -10,6 +10,7 @@
     "rules": "infra/firestore.rules"
   },
   "hosting": {
+    "site": "banghub-english-prod",
     "public": "app/frontend/dist",
     "ignore": [
       "firebase.json",

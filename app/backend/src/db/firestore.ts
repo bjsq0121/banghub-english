@@ -27,3 +27,5 @@ export function getFirestoreClient() {
 
   return firestoreClient;
 }
+
+export { getFirebaseApp };

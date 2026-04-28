@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getChildModeLabel, getHome, getMission, login, markCompletion } from "./api";
+import { getChildModeLabel, getHome, getMission, login, markCompletion, resolveApiBase } from "./api";
 
 describe("api", () => {
   afterEach(() => {
@@ -43,6 +43,10 @@ describe("api", () => {
     );
 
     await expect(login("dad@example.com", "bad-password")).rejects.toThrow("Invalid credentials");
+  });
+
+  it("uses a relative API base in production when no override is provided", () => {
+    expect(resolveApiBase(undefined, false)).toBe("");
   });
 
   it("posts mission completion payload", async () => {

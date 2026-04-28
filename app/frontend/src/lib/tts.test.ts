@@ -18,25 +18,55 @@ describe("playMissionAudio", () => {
     vi.unstubAllGlobals();
   });
 
-  it("falls back to speech when audio playback rejects", async () => {
+  it("requests cached mission audio before falling back to browser speech", async () => {
+    const playMock = vi.fn().mockResolvedValue(undefined);
+    const audioMock = vi.fn(() => ({
+      addEventListener: vi.fn(),
+      play: playMock
+    }));
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => new Blob(["audio-bytes"], { type: "audio/mpeg" })
+    }));
+    vi.stubGlobal("URL", {
+      createObjectURL: vi.fn(() => "blob:audio")
+    });
+    vi.stubGlobal("Audio", audioMock);
+
+    await playMissionAudio(
+      {
+        missionId: "mission-red-car",
+        childMode: "together",
+        fallbackText: "red car"
+      },
+      { rate: 0.82 }
+    );
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/tts?missionId=mission-red-car&childMode=together"));
+    expect(audioMock).toHaveBeenCalledWith("blob:audio");
+    expect(playMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to browser speech when server audio request fails", async () => {
     const speakMock = vi.fn();
 
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
     vi.stubGlobal("SpeechSynthesisUtterance", TestUtterance);
     vi.stubGlobal("speechSynthesis", {
       cancel: vi.fn(),
       getVoices: vi.fn(() => []),
       speak: speakMock
     });
-    vi.stubGlobal(
-      "Audio",
-      vi.fn(() => ({
-        addEventListener: vi.fn(),
-        play: vi.fn().mockRejectedValue(new Error("play failed"))
-      }))
-    );
 
-    playMissionAudio("/audio/sentence.mp3", "I see a little train.");
-    await Promise.resolve();
+    await playMissionAudio(
+      {
+        missionId: "mission-red-car",
+        childMode: "together",
+        fallbackText: "red car"
+      },
+      { rate: 0.82 }
+    );
 
     expect(speakMock).toHaveBeenCalledTimes(1);
   });
